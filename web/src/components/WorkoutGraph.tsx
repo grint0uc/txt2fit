@@ -61,7 +61,10 @@ export function WorkoutGraph({ steps, ftp }: WorkoutGraphProps) {
               const avgPct = (lowPct + highPct) / 2;
 
               const color = getPowerZoneColor(avgPct);
-              const heightPct = (avgPct / maxScale) * 100;
+              const lowHeightPct = (lowPct / maxScale) * 100;
+              const highHeightPct = (highPct / maxScale) * 100;
+
+              const isRamp = lowPct !== highPct;
 
               return (
                 <div
@@ -72,14 +75,24 @@ export function WorkoutGraph({ steps, ftp }: WorkoutGraphProps) {
                     borderRight: '1px solid rgba(0, 0, 0, 0.2)',
                   }}
                 >
-                  {/* Bar */}
-                  <div
-                    className="absolute bottom-0 w-full"
-                    style={{
-                      height: `${heightPct}%`,
-                      backgroundColor: color,
-                    }}
-                  />
+                  {/* Bar or Ramp */}
+                  {isRamp ? (
+                    <div
+                      className="absolute bottom-0 w-full h-full"
+                      style={{
+                        clipPath: `polygon(0 ${100 - lowHeightPct}%, 100% ${100 - highHeightPct}%, 100% 100%, 0 100%)`,
+                        backgroundColor: color,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="absolute bottom-0 w-full"
+                      style={{
+                        height: `${lowHeightPct}%`,
+                        backgroundColor: color,
+                      }}
+                    />
+                  )}
 
                   {/* Tooltip */}
                   <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-carbon-950 border border-carbon-700 rounded px-2 py-1 text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
