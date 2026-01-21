@@ -1,0 +1,10 @@
+# Sweet Spot 3x10
+# Classic sweet spot workout: 3 sets of 10 minutes at 88-94% FTP
+
+warmup 10min
+
+# Main set: 3x 10min sweet spot intervals
+3x 10min 88-94% FTP @85-95rpm "Smooth and steady"
+5min 50% FTP
+
+cooldown 10min

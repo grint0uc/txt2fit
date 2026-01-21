@@ -1,0 +1,30 @@
+# Cadence Pyramid Workout
+# Tests all new features: cadence targets, notes, open intervals
+
+warmup 10min
+
+# Leg speed drills - high cadence
+2min 70% FTP @100rpm "Smooth pedaling"
+2min 70% FTP @110rpm "Stay relaxed"
+2min 70% FTP @120rpm "Quick feet!"
+
+# Recovery
+2min 50% FTP @85rpm
+
+# Force work - low cadence grinding
+3min 85% FTP @60rpm "Big gear, seated"
+3min 85% FTP @55rpm "Stay seated, push"
+
+# Recovery
+2min 50% FTP
+
+# FTP Test Block - max effort
+1min 90% FTP "Get ready"
+5min 100-120% FTP "Go all out!"
+3min 50% FTP "Recover"
+
+# Threshold with cadence
+3x 5min 95-100% FTP @90-95rpm "Hold it steady"
+2min 50% FTP
+
+cooldown 10min
