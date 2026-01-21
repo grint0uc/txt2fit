@@ -8,7 +8,7 @@ export function Preview() {
 
   if (!currentWorkout || currentWorkout.steps.length === 0) {
     return (
-      <div className="flex flex-col h-full">
+      <div>
         <h2 className="text-lg font-bold text-carbon-300 mb-4">Settings & Preview</h2>
 
         {/* FTP/Max HR Settings */}
@@ -70,7 +70,7 @@ export function Preview() {
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center text-carbon-500 text-sm">
+        <div className="py-20 text-center text-carbon-500 text-sm">
           No workout parsed yet. Edit the text to see preview.
         </div>
       </div>
@@ -90,7 +90,7 @@ export function Preview() {
   const avgWatts = totalDuration > 0 && ftp ? Math.round(totalWatts / totalDuration) : 0;
 
   return (
-    <div className="flex flex-col h-full">
+    <div>
       <h2 className="text-lg font-bold text-carbon-100 mb-4">Workout Preview</h2>
 
       {/* FTP/Max HR Settings */}
@@ -187,7 +187,7 @@ export function Preview() {
           </div>
 
           {/* Steps */}
-          <div className="flex-1 overflow-y-auto space-y-2">
+          <div className="space-y-2">
             {currentWorkout.steps.map((step, idx) => (
               <StepRow key={idx} step={step} index={idx + 1} ftp={ftp} />
             ))}
