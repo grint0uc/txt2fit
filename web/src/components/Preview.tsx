@@ -21,7 +21,15 @@ export function Preview() {
               value={ftp ?? ''}
               onChange={(e) => {
                 const val = e.target.value;
-                setFtp(val ? Math.max(50, parseInt(val)) : null);
+                setFtp(val ? parseInt(val) : null);
+              }}
+              onBlur={(e) => {
+                const val = parseInt(e.target.value);
+                if (val && val < 50) {
+                  setFtp(50);
+                } else if (val && val > 500) {
+                  setFtp(500);
+                }
               }}
               placeholder="e.g. 250"
               className={`input text-sm ${!ftp ? 'border-red-500' : ''}`}
@@ -43,7 +51,15 @@ export function Preview() {
               value={max_hr ?? ''}
               onChange={(e) => {
                 const val = e.target.value;
-                setMaxHr(val ? Math.max(100, parseInt(val)) : null);
+                setMaxHr(val ? parseInt(val) : null);
+              }}
+              onBlur={(e) => {
+                const val = parseInt(e.target.value);
+                if (val && val < 100) {
+                  setMaxHr(100);
+                } else if (val && val > 220) {
+                  setMaxHr(220);
+                }
               }}
               placeholder="e.g. 185"
               className="input text-sm"
@@ -98,7 +114,15 @@ export function Preview() {
             value={ftp ?? ''}
             onChange={(e) => {
               const val = e.target.value;
-              setFtp(val ? Math.max(50, parseInt(val)) : null);
+              setFtp(val ? parseInt(val) : null);
+            }}
+            onBlur={(e) => {
+              const val = parseInt(e.target.value);
+              if (val && val < 50) {
+                setFtp(50);
+              } else if (val && val > 500) {
+                setFtp(500);
+              }
             }}
             placeholder="e.g. 250"
             className={`input text-sm ${!ftp ? 'border-red-500' : ''}`}
@@ -120,7 +144,15 @@ export function Preview() {
             value={max_hr ?? ''}
             onChange={(e) => {
               const val = e.target.value;
-              setMaxHr(val ? Math.max(100, parseInt(val)) : null);
+              setMaxHr(val ? parseInt(val) : null);
+            }}
+            onBlur={(e) => {
+              const val = parseInt(e.target.value);
+              if (val && val < 100) {
+                setMaxHr(100);
+              } else if (val && val > 220) {
+                setMaxHr(220);
+              }
             }}
             placeholder="e.g. 185"
             className="input text-sm"
