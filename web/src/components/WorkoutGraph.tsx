@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { WorkoutStep } from '../types';
 
 interface WorkoutGraphProps {
@@ -6,6 +7,7 @@ interface WorkoutGraphProps {
 }
 
 export function WorkoutGraph({ steps, ftp }: WorkoutGraphProps) {
+  const [hoveredStep, setHoveredStep] = useState<number | null>(null);
   const totalDuration = steps.reduce((sum, step) => sum + step.duration_seconds, 0);
 
   // Get color based on power percentage (% FTP)
@@ -94,9 +96,8 @@ export function WorkoutGraph({ steps, ftp }: WorkoutGraphProps) {
 
           {/* Workout profile SVG */}
           <svg className="absolute inset-0 w-full h-full" viewBox={`0 0 ${svgWidth} ${graphHeight}`} preserveAspectRatio="none">
-            {shapes.map(({ path, color, step, idx, x, width }) => {
-              const lowPct = step.power_low_pct ?? 0;
-              const highPct = step.power_high_pct ?? lowPct;
+            {shapes.map(({ path, color, idx }) => {
+              const isHovered = hoveredStep === idx;
 
               return (
                 <g key={idx}>
@@ -105,44 +106,13 @@ export function WorkoutGraph({ steps, ftp }: WorkoutGraphProps) {
                     fill={color}
                     stroke="rgba(0, 0, 0, 0.3)"
                     strokeWidth="1"
-                    className="transition-opacity hover:opacity-80 cursor-default"
+                    className="transition-all cursor-pointer"
+                    style={{
+                      filter: isHovered ? 'brightness(1.4)' : 'none',
+                    }}
+                    onMouseEnter={() => setHoveredStep(idx)}
+                    onMouseLeave={() => setHoveredStep(null)}
                   />
-                  {/* Invisible hover area for tooltip */}
-                  <rect
-                    x={x}
-                    y="0"
-                    width={width}
-                    height={graphHeight}
-                    fill="transparent"
-                    className="peer cursor-default"
-                  />
-                  {/* Tooltip */}
-                  <foreignObject
-                    x={x + width / 2 - 90}
-                    y="10"
-                    width="180"
-                    height="80"
-                    className="pointer-events-none opacity-0 peer-hover:opacity-100 transition-opacity"
-                  >
-                    <div className="bg-carbon-950 border-2 border-plasma-pink rounded-lg px-3 py-2 text-sm whitespace-nowrap shadow-2xl">
-                      <div className="font-bold text-plasma-pink text-base mb-1">
-                        Step {idx + 1}
-                      </div>
-                      <div className="text-carbon-300 mb-0.5">
-                        Duration: {Math.floor(step.duration_seconds / 60)}:{(step.duration_seconds % 60).toString().padStart(2, '0')}
-                      </div>
-                      <div className="text-carbon-100 font-medium">
-                        {lowPct === highPct ? (
-                          <>Power: {Math.round((lowPct / 100) * ftp)}W ({lowPct}%)</>
-                        ) : (
-                          <>
-                            {Math.round((lowPct / 100) * ftp)}W → {Math.round((highPct / 100) * ftp)}W
-                            <div className="text-xs text-carbon-400">({lowPct}% → {highPct}% FTP)</div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </foreignObject>
                 </g>
               );
             })}
@@ -160,6 +130,57 @@ export function WorkoutGraph({ steps, ftp }: WorkoutGraphProps) {
           <div>{Math.floor(totalDuration * 3 / 4 / 60)}:{Math.floor((totalDuration * 3 / 4) % 60).toString().padStart(2, '0')}</div>
           <div>{Math.floor(totalDuration / 60)}:{Math.floor(totalDuration % 60).toString().padStart(2, '0')}</div>
         </div>
+      </div>
+
+      {/* Hovered Step Info */}
+      <div className="mt-4 min-h-[80px]">
+        {hoveredStep !== null ? (
+          <div className="bg-carbon-900 border-2 border-plasma-pink rounded-lg px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="font-bold text-plasma-pink text-lg">
+                Step {hoveredStep + 1}
+              </div>
+              <div className="text-carbon-300 text-sm">
+                Duration: {Math.floor(steps[hoveredStep].duration_seconds / 60)}:{(steps[hoveredStep].duration_seconds % 60).toString().padStart(2, '0')}
+              </div>
+            </div>
+            <div className="mt-2 text-carbon-100 font-medium">
+              {(() => {
+                const step = steps[hoveredStep];
+                const lowPct = step.power_low_pct ?? 0;
+                const highPct = step.power_high_pct ?? lowPct;
+
+                if (lowPct === highPct) {
+                  return (
+                    <div className="text-base">
+                      Power: {Math.round((lowPct / 100) * ftp)}W ({lowPct}% FTP)
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div>
+                      <div className="text-base">
+                        Power: {Math.round((lowPct / 100) * ftp)}W → {Math.round((highPct / 100) * ftp)}W
+                      </div>
+                      <div className="text-sm text-carbon-400 mt-1">
+                        {lowPct}% → {highPct}% FTP (Ramp)
+                      </div>
+                    </div>
+                  );
+                }
+              })()}
+            </div>
+            {steps[hoveredStep].notes && (
+              <div className="mt-2 text-sm text-plasma-pink-light italic">
+                "{steps[hoveredStep].notes}"
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-carbon-900 border border-carbon-700 rounded-lg px-4 py-3 text-center text-carbon-500 text-sm">
+            Hover over a section to see details
+          </div>
+        )}
       </div>
 
       {/* Legend */}
