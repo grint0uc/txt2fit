@@ -1,0 +1,483 @@
+{
+  "project": "txt2fit Web App",
+  "status": "active",
+  "version": "0.1.0",
+  "section": "Future Features & Not Yet Implemented",
+  "future_functions": [
+    {
+      "id": "hr_targets",
+      "category": "Workout Features",
+      "name": "Heart Rate Targets",
+      "status": "not_implemented",
+      "priority": "high",
+      "description": "Support heart rate-based training targets in workout definitions",
+      "details": {
+        "absolute_bpm": "Specify absolute BPM targets (e.g., '10min 150bpm', '5min 140-160bpm')",
+        "percent_max_hr": "Specify % of max HR (e.g., '20min 75% HR', '10min 65-80% HR')",
+        "fit_encoding": "Encode HR targets into FIT file with proper scaling",
+        "preview_display": "Show calculated BPM values in Preview component (requires Max HR setting)"
+      },
+      "implementation_steps": [
+        "Update WorkoutParser to recognize HR patterns (bpm, % HR)",
+        "Add heart_rate_low and heart_rate_high to WorkoutStep type",
+        "Create formatHeartRate() function to display BPM with max HR context",
+        "Update FitGenerator to encode HR targets in FIT messages",
+        "Add HR display to StepRow in Preview component",
+        "Test with devices supporting HR targets"
+      ],
+      "affected_files": [
+        "src/lib/workout-parser.ts",
+        "src/types/index.ts",
+        "src/lib/fit-generator.ts",
+        "src/components/Preview.tsx"
+      ],
+      "example_usage": [
+        "10min 150bpm",
+        "5min 140-160bpm",
+        "20min 75% HR",
+        "10min 65-80% HR"
+      ]
+    },
+    {
+      "id": "open_sections",
+      "category": "Workout Features",
+      "name": "Open/Free Sections",
+      "status": "not_implemented",
+      "priority": "medium",
+      "description": "Support open/free ride sections with no power target",
+      "details": {
+        "purpose": "For FTP tests, recovery rides, or free-form training",
+        "syntax": "Specify duration only (e.g., '5min open', '10min free')",
+        "fit_encoding": "Encode as OPEN target type in FIT file",
+        "use_cases": "FTP tests, recovery, custom efforts without preset targets"
+      },
+      "implementation_steps": [
+        "Re-add OPEN to StepType and TargetType enums",
+        "Update parser to recognize 'open' and 'free' keywords",
+        "Add OPEN step handling to FitGenerator",
+        "Display open sections in Preview",
+        "Allow conditional power requirement (optional for open sections)"
+      ],
+      "affected_files": [
+        "src/lib/workout-parser.ts",
+        "src/types/index.ts",
+        "src/lib/fit-generator.ts",
+        "src/components/Preview.tsx"
+      ],
+      "example_usage": [
+        "5min open",
+        "10min free",
+        "20min open \"FTP Test\""
+      ]
+    },
+    {
+      "id": "save_workouts",
+      "category": "User Features",
+      "name": "Save Workouts to Database",
+      "status": "partially_implemented",
+      "priority": "high",
+      "description": "Save created workouts to Supabase for authenticated users",
+      "details": {
+        "auth_required": "Users must be logged in",
+        "storage": "Save workout text, name, FTP, metadata to database",
+        "retrieval": "Load saved workouts for editing/re-use",
+        "sharing": "Generate shareable links for other users to access workouts"
+      },
+      "implementation_steps": [
+        "Create Supabase 'workouts' table schema",
+        "Build SaveWorkoutModal component with title/description",
+        "Implement saveWorkout() function to insert to Supabase",
+        "Create loadWorkout() function to fetch from database",
+        "Add 'My Workouts' page to list user's saved workouts",
+        "Implement edit/delete functionality",
+        "Add share functionality with unique URLs"
+      ],
+      "affected_files": [
+        "src/lib/supabase.ts",
+        "src/components/SaveWorkoutModal.tsx",
+        "src/pages/workouts.tsx (new)"
+      ],
+      "database_schema": {
+        "table": "workouts",
+        "columns": [
+          "id (uuid, primary key)",
+          "user_id (uuid, foreign key to auth.users)",
+          "name (text)",
+          "description (text, optional)",
+          "workout_text (text)",
+          "ftp (integer, optional)",
+          "max_hr (integer, optional)",
+          "created_at (timestamp)",
+          "updated_at (timestamp)",
+          "is_public (boolean)",
+          "share_id (uuid, for sharing)"
+        ]
+      }
+    },
+    {
+      "id": "workout_dashboard",
+      "category": "User Features",
+      "name": "User Dashboard & Workout History",
+      "status": "not_implemented",
+      "priority": "high",
+      "description": "Display user's saved workouts with management tools",
+      "details": {
+        "list_view": "Show all user workouts with metadata",
+        "search_filter": "Search by name, date, difficulty",
+        "sort": "Sort by date created, name, FTP requirement",
+        "actions": "Edit, delete, duplicate, share, download workouts",
+        "analytics": "Show stats (total workouts, most used workouts)"
+      },
+      "implementation_steps": [
+        "Create Workouts page component",
+        "Fetch user's workouts from Supabase on load",
+        "Build workout list/grid view",
+        "Add search and filter functionality",
+        "Implement edit/delete operations",
+        "Add duplicate workout feature",
+        "Create share modal with copy-link functionality"
+      ],
+      "affected_files": [
+        "src/pages/workouts.tsx (new)",
+        "src/components/WorkoutCard.tsx (new)",
+        "src/components/WorkoutFilters.tsx (new)"
+      ]
+    },
+    {
+      "id": "graphs_analytics",
+      "category": "Analytics",
+      "name": "Graphs & Analytics",
+      "status": "not_implemented",
+      "priority": "medium",
+      "description": "Visualize workout structure and intensity with charts",
+      "details": {
+        "power_curve": "Line graph showing power output over time",
+        "intensity_heatmap": "Color-coded zones (recovery, endurance, threshold, VO2, sprint)",
+        "duration_breakdown": "Pie chart of time spent in each zone",
+        "avg_power": "Show average power, max power, normalized power",
+        "tss_estimation": "Estimate Training Stress Score (TSS) for the workout"
+      },
+      "implementation_steps": [
+        "Install charting library (e.g., Recharts, Chart.js)",
+        "Create PowerCurveGraph component",
+        "Build IntensityHeatmap component with zone colors",
+        "Implement DurationBreakdown pie chart",
+        "Add TSS calculation algorithm",
+        "Integrate graphs into Preview component",
+        "Add export graph as image functionality"
+      ],
+      "affected_files": [
+        "src/components/Preview.tsx",
+        "src/components/graphs/ (new directory)"
+      ],
+      "dependencies": [
+        "recharts or chart.js"
+      ]
+    },
+    {
+      "id": "device_sync",
+      "category": "Device Integration",
+      "name": "Direct Device Upload/Sync",
+      "status": "not_implemented",
+      "priority": "low",
+      "description": "Upload workouts directly to cycling computers (Karoo, Wahoo, Garmin)",
+      "details": {
+        "hammerhead_api": "Integrate with Hammerhead Dashboard API",
+        "wahoo_api": "Connect to Wahoo device API",
+        "garmin_connect": "Sync with Garmin Connect",
+        "auto_sync": "Automatically sync when devices are connected"
+      },
+      "implementation_steps": [
+        "Research device APIs and authentication flows",
+        "Implement OAuth flows for each platform",
+        "Create device connection management UI",
+        "Build upload handlers for each platform",
+        "Add status indicators for sync success/failure",
+        "Implement retry logic for failed syncs"
+      ],
+      "affected_files": [
+        "src/lib/device-apis/ (new directory)"
+      ],
+      "notes": "Requires API access from device manufacturers; may need backend server"
+    },
+    {
+      "id": "ai_coach",
+      "category": "AI Features",
+      "name": "AI Cycling Coach",
+      "status": "not_implemented",
+      "priority": "low",
+      "description": "AI-powered workout generation and personalized recommendations",
+      "details": {
+        "generate_workouts": "AI suggests workouts based on goals (build FTP, endurance, sprint power)",
+        "analyze_history": "Analyze completed workouts to recommend next training focus",
+        "personalization": "Adapt recommendations based on user fitness level",
+        "tips": "Show tips for executing workouts effectively",
+        "progression": "Suggest progressive overload (increase power, duration, frequency)"
+      },
+      "implementation_steps": [
+        "Set up OpenAI/Claude API integration",
+        "Create workout generation prompts",
+        "Build user profile/goals collection UI",
+        "Implement progression algorithm",
+        "Create AI Coach chat interface",
+        "Add workout history analysis"
+      ],
+      "affected_files": [
+        "src/lib/ai/ (new directory)",
+        "src/pages/coach.tsx (new)"
+      ],
+      "api_required": "OpenAI or Anthropic API"
+    },
+    {
+      "id": "completed_analysis",
+      "category": "Analytics",
+      "name": "Completed Workout Analysis",
+      "status": "not_implemented",
+      "priority": "medium",
+      "description": "Analyze completed workouts from cycling computers",
+      "details": {
+        "fit_import": "Import completed workout FIT files",
+        "metrics": "Show actual power, HR, cadence data from ride",
+        "comparison": "Compare planned vs actual performance",
+        "insights": "Generate insights (average effort, intensity distribution)",
+        "history_tracking": "Store workout history for progress tracking"
+      },
+      "implementation_steps": [
+        "Create FIT file parser for completed workouts",
+        "Build file upload UI",
+        "Extract metrics from FIT files",
+        "Display planned vs actual comparison",
+        "Create insights generation algorithm",
+        "Build workout history timeline view",
+        "Store completed workouts in database"
+      ],
+      "affected_files": [
+        "src/lib/fit-parser.ts (new)",
+        "src/pages/history.tsx (new)"
+      ]
+    },
+    {
+      "id": "workout_templates",
+      "category": "User Features",
+      "name": "Workout Templates",
+      "status": "not_implemented",
+      "priority": "low",
+      "description": "Pre-built workout templates for common training types",
+      "details": {
+        "predefined": "Sweet spot, VO2max, threshold, endurance, sprint templates",
+        "customizable": "Users can modify templates to their needs",
+        "difficulty_levels": "Easy, moderate, hard versions of each template",
+        "duration_options": "30min, 60min, 90min versions"
+      },
+      "implementation_steps": [
+        "Create template database/seed data",
+        "Build TemplateGallery component",
+        "Implement template selection UI",
+        "Add parameter customization (duration, intensity)",
+        "Allow users to create and save personal templates",
+        "Add template sharing between users"
+      ],
+      "affected_files": [
+        "src/pages/templates.tsx (new)",
+        "src/components/TemplateGallery.tsx (new)"
+      ]
+    },
+    {
+      "id": "social_sharing",
+      "category": "User Features",
+      "name": "Social Sharing & Collaboration",
+      "status": "not_implemented",
+      "priority": "low",
+      "description": "Share workouts with friends and training groups",
+      "details": {
+        "shareable_links": "Generate unique URLs for sharing workouts",
+        "public_gallery": "Browse community workouts",
+        "comments": "Users can comment on shared workouts",
+        "likes": "Like/favorite workouts",
+        "training_groups": "Create groups for team training"
+      },
+      "implementation_steps": [
+        "Add sharing table to Supabase",
+        "Implement share link generation",
+        "Create public workout gallery",
+        "Build comments system",
+        "Add like/favorite functionality",
+        "Create training group management"
+      ],
+      "affected_files": [
+        "src/pages/gallery.tsx (new)"
+      ]
+    },
+    {
+      "id": "mobile_app",
+      "category": "Platform",
+      "name": "Mobile App (iOS/Android)",
+      "status": "not_implemented",
+      "priority": "low",
+      "description": "Native mobile applications for iOS and Android",
+      "details": {
+        "react_native": "Build cross-platform app with React Native",
+        "offline_mode": "Work offline and sync when connected",
+        "push_notifications": "Send training reminders and updates",
+        "home_screen_widget": "Show next workout on home screen"
+      },
+      "implementation_steps": [
+        "Set up React Native project",
+        "Port web app functionality to mobile",
+        "Implement offline storage",
+        "Add push notifications",
+        "Create native widgets",
+        "Build app stores deployment pipeline"
+      ],
+      "affected_files": "New React Native project"
+    },
+    {
+      "id": "dark_light_mode",
+      "category": "UI/UX",
+      "name": "Light Mode Theme",
+      "status": "not_implemented",
+      "priority": "low",
+      "description": "Toggle between dark and light theme",
+      "details": {
+        "system_preference": "Auto-detect system theme preference",
+        "user_toggle": "Manual theme switcher in settings",
+        "color_scheme": "Light theme with appropriate color palette"
+      },
+      "implementation_steps": [
+        "Extend Tailwind config with light theme colors",
+        "Create theme context for app-wide theme state",
+        "Add theme toggle button in UI",
+        "Persist theme preference to localStorage",
+        "Test readability and contrast in both themes"
+      ],
+      "affected_files": [
+        "tailwind.config.js",
+        "src/App.tsx"
+      ]
+    },
+    {
+      "id": "keyboard_shortcuts",
+      "category": "UI/UX",
+      "name": "Keyboard Shortcuts",
+      "status": "not_implemented",
+      "priority": "low",
+      "description": "Power user keyboard shortcuts for faster workflow",
+      "details": {
+        "download_fit": "Cmd+Shift+D to download FIT file",
+        "save_workout": "Cmd+S to save workout",
+        "new_workout": "Cmd+N for new workout",
+        "help": "? to show keyboard shortcuts"
+      },
+      "implementation_steps": [
+        "Add keyboard event listeners to App",
+        "Create shortcuts handler utility",
+        "Build shortcuts help modal",
+        "Implement each shortcut action",
+        "Test across different browsers"
+      ],
+      "affected_files": [
+        "src/App.tsx",
+        "src/lib/shortcuts.ts (new)"
+      ]
+    },
+    {
+      "id": "multi_language",
+      "category": "Internationalization",
+      "name": "Multi-Language Support",
+      "status": "not_implemented",
+      "priority": "low",
+      "description": "Support for multiple languages (Spanish, French, German, etc.)",
+      "details": {
+        "i18n_library": "Use i18next or similar library",
+        "supported_languages": "English (default), Spanish, French, German, Chinese",
+        "rtl_support": "Right-to-left language support"
+      },
+      "implementation_steps": [
+        "Install i18n library",
+        "Extract all UI strings to translation files",
+        "Create language selector in settings",
+        "Implement language switching",
+        "Add RTL support for Arabic/Hebrew",
+        "Test all languages"
+      ],
+      "affected_files": "Many - UI text across codebase"
+    },
+    {
+      "id": "unit_tests",
+      "category": "Testing",
+      "name": "Unit & Integration Tests",
+      "status": "not_implemented",
+      "priority": "medium",
+      "description": "Comprehensive test coverage for core functionality",
+      "details": {
+        "parser_tests": "Test workout text parsing with various inputs",
+        "fit_generation_tests": "Verify FIT file generation correctness",
+        "component_tests": "Test React components",
+        "integration_tests": "Test complete workflows"
+      },
+      "implementation_steps": [
+        "Set up Vitest and React Testing Library",
+        "Write parser unit tests",
+        "Write FIT generator tests",
+        "Write component tests",
+        "Write integration tests",
+        "Set up CI/CD test running"
+      ],
+      "affected_files": "New test files"
+    },
+    {
+      "id": "pwa",
+      "category": "Platform",
+      "name": "Progressive Web App (PWA)",
+      "status": "not_implemented",
+      "priority": "low",
+      "description": "Enable app to work offline and be installable",
+      "details": {
+        "service_worker": "Offline functionality",
+        "manifest": "Install to home screen",
+        "offline_storage": "Cache workouts offline",
+        "sync": "Background sync when online"
+      },
+      "implementation_steps": [
+        "Create service worker",
+        "Add web manifest file",
+        "Implement offline storage",
+        "Test offline functionality",
+        "Configure app icons and theme colors",
+        "Deploy PWA"
+      ],
+      "affected_files": [
+        "public/manifest.json",
+        "src/service-worker.ts (new)"
+      ]
+    }
+  ],
+  "implementation_priorities": {
+    "phase_2": [
+      "save_workouts",
+      "workout_dashboard",
+      "hr_targets"
+    ],
+    "phase_3": [
+      "graphs_analytics",
+      "completed_analysis",
+      "open_sections"
+    ],
+    "phase_4": [
+      "ai_coach",
+      "workout_templates",
+      "social_sharing"
+    ],
+    "phase_5": [
+      "device_sync",
+      "mobile_app",
+      "pwa"
+    ]
+  },
+  "notes": {
+    "general": "This list represents features that could enhance the txt2fit platform. Priorities and timelines can be adjusted based on user feedback and development capacity.",
+    "dependencies": "Some features depend on others (e.g., analytics requires completed workout analysis)",
+    "api_requirements": "Device sync and AI features require external API integrations",
+    "user_feedback": "Prioritize based on user feature requests and usage patterns"
+  }
+}
