@@ -29,7 +29,7 @@ export function Navbar() {
             <span className="text-white font-bold text-lg">≈</span>
           </div>
           <h1 className="text-xl font-bold text-white">
-            txt2fit
+            WattScript
           </h1>
           <span className="text-xs text-carbon-400 ml-2">beta</span>
         </div>

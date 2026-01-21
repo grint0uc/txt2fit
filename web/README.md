@@ -1,6 +1,6 @@
-# txt2fit Web App
+# WattScript Web App
 
-A modern React-based web application for creating FIT workout files for cycling computers and smart trainers.
+Script power-based cycling workouts and download FIT files for Garmin, Wahoo, and Hammerhead devices.
 
 **Live Demo:** (Coming soon - deploying to Vercel)
 
