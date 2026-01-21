@@ -272,7 +272,7 @@ export class WorkoutParser {
     }
 
     return {
-      step_type: parsed.power_low_pct === parsed.power_high_pct ? StepType.STEADY : StepType.RANGE,
+      step_type: parsed.power_low_pct === parsed.power_high_pct ? StepType.STEADY : StepType.RAMP,
       duration_seconds: parsed.duration_seconds,
       target_type: TargetType.POWER,
       power_low_pct: parsed.power_low_pct,

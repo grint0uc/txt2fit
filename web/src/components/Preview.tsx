@@ -205,10 +205,19 @@ function StepRow({ step, index, ftp }: StepRowProps) {
     return secs > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${mins}min`;
   };
 
-  const formatPower = (pct: number | undefined): string => {
-    if (pct === undefined || !ftp) return '—';
-    const watts = Math.round((pct / 100) * ftp);
-    return `${watts}W (${pct}%)`;
+  const formatPower = (lowPct: number | undefined, highPct?: number | undefined): string => {
+    if (lowPct === undefined || !ftp) return '—';
+
+    const lowWatts = Math.round((lowPct / 100) * ftp);
+
+    // If it's a ramp (different low and high values)
+    if (highPct !== undefined && highPct !== lowPct) {
+      const highWatts = Math.round((highPct / 100) * ftp);
+      return `${lowWatts}W → ${highWatts}W (${lowPct}% → ${highPct}%)`;
+    }
+
+    // Steady power
+    return `${lowWatts}W (${lowPct}%)`;
   };
 
   const intensityColors: { [key: string]: string } = {
@@ -228,8 +237,7 @@ function StepRow({ step, index, ftp }: StepRowProps) {
             Step {index} • {formatDuration(step.duration_seconds)}
           </div>
           <div className="text-carbon-400 text-xs mt-1">
-            Power: {formatPower(step.power_low_pct === step.power_high_pct ? step.power_low_pct : undefined)}
-            {step.power_low_pct !== step.power_high_pct && ` (${step.power_low_pct}% - ${step.power_high_pct}%)`}
+            Power: {formatPower(step.power_low_pct, step.power_high_pct)}
           </div>
           {(step.cadence_low || step.cadence_high) && (
             <div className="text-carbon-400 text-xs">
