@@ -24,7 +24,7 @@ export function Editor() {
         <textarea
           value={workoutText}
           onChange={handleChange}
-          placeholder="warmup 10min&#10;3x 5min 95% FTP @90rpm&#10;cooldown 5min"
+          placeholder="warmup 10min&#10;5min 85-95% FTP&#10;3x 5min 95% FTP @90rpm&#10;cooldown 5min"
           className="input flex-1 font-mono text-sm resize-none"
           spellCheck="false"
         />
@@ -35,7 +35,7 @@ export function Editor() {
         <ul className="text-xs text-carbon-300 space-y-1 font-mono">
           <li>• <span className="text-plasma-pink">10min</span> - Duration (s, min, h)</li>
           <li>• <span className="text-plasma-pink">90% FTP</span> - Power target (required)</li>
-          <li>• <span className="text-plasma-pink">85-95% FTP</span> - Power range</li>
+          <li>• <span className="text-plasma-pink">85-95% FTP</span> - Power ramp (progressive increase)</li>
           <li>• <span className="text-plasma-pink">@90rpm</span> - Cadence target (optional)</li>
           <li>• <span className="text-plasma-pink">"note"</span> - Step instructions</li>
           <li>• <span className="text-plasma-pink">3x 5min</span> - Repeat 3 times</li>

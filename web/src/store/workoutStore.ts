@@ -27,7 +27,7 @@ export const useWorkoutStore = create<WorkoutState>()(
   persist(
     (set) => ({
       currentWorkout: defaultWorkout,
-      workoutText: 'warmup 10min\n3x 5min 95% FTP @90rpm\ncooldown 5min',
+      workoutText: 'warmup 10min\n5min 85-95% FTP "ramp up"\n3x 5min 95% FTP @90rpm\ncooldown 5min',
       ftp: null,
       max_hr: null,
       lastSavedId: null,
