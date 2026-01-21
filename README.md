@@ -331,6 +331,15 @@ fit_workout_creator/
 - Verify FTP is set correctly on device
 - Some trainers have ±5% tolerance
 
+### Values 10x too large/small
+If power, HR, or duration values appear significantly off by a factor of 10, check the FIT scaling constants in `workout_creator.py`:
+```python
+FTP_SCALE = 1              # multiply % by this to get FIT value
+HR_ABSOLUTE_OFFSET = 100   # offset for absolute HR values
+DURATION_MS_SCALE = 1000   # duration in milliseconds in FIT protocol
+```
+These map workout percentages/values to FIT protocol encoding. If values are consistently 10x off on your device, these constants may need adjustment for your specific trainer/device combination.
+
 ---
 
 ## Future Plans
