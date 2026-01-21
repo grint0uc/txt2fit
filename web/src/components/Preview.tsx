@@ -1,6 +1,7 @@
 import { useWorkoutStore } from '../store/workoutStore';
 import { FiAlertCircle } from 'react-icons/fi';
 import type { WorkoutStep } from '../types';
+import { WorkoutGraph } from './WorkoutGraph';
 
 export function Preview() {
   const { currentWorkout, ftp, max_hr, setFtp, setMaxHr } = useWorkoutStore();
@@ -178,6 +179,11 @@ export function Preview() {
               <p className="text-xs text-carbon-400">Steps</p>
               <p className="text-lg font-bold text-plasma-pink">{currentWorkout.steps.length}</p>
             </div>
+          </div>
+
+          {/* Workout Graph */}
+          <div className="mb-4">
+            <WorkoutGraph steps={currentWorkout.steps} ftp={ftp} />
           </div>
 
           {/* Steps */}
