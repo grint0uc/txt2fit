@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-carbon-950 text-carbon-100 font-sans;
+  }
+
+  h1 {
+    @apply text-3xl font-bold;
+  }
+
+  h2 {
+    @apply text-2xl font-bold;
+  }
+
+  h3 {
+    @apply text-xl font-bold;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-plasma-pink focus:ring-offset-2 focus:ring-offset-carbon-950;
+  }
+
+  .btn-primary {
+    @apply btn bg-plasma-pink text-white hover:bg-plasma-pink-dark active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply btn bg-carbon-800 text-carbon-100 border border-carbon-700 hover:bg-carbon-700 hover:border-plasma-pink;
+  }
+
+  .btn-ghost {
+    @apply btn text-carbon-300 hover:text-plasma-pink hover:bg-carbon-900;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 rounded-lg bg-carbon-900 border border-carbon-800 text-carbon-100 placeholder-carbon-500 transition-all duration-200;
+  }
+
+  .input:focus {
+    @apply border-plasma-pink ring-1 ring-plasma-pink bg-carbon-800;
+  }
+
+  .card {
+    @apply rounded-lg border border-carbon-800 bg-carbon-900 p-6 transition-all duration-200 hover:border-plasma-pink hover:shadow-lg;
+  }
+
+  .card-hover {
+    @apply hover:bg-carbon-800;
+  }
+
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-40;
+  }
+
+  .modal-content {
+    @apply fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-carbon-900 border border-carbon-800 rounded-lg p-6 max-w-md w-full max-h-96 overflow-y-auto z-50;
+  }
+}
+
+/* Syntax highlighting for code */
+.hljs {
+  @apply bg-carbon-900 text-carbon-200;
+}
+
+.hljs-string {
+  @apply text-emerald-400;
+}
+
+.hljs-number,
+.hljs-literal {
+  @apply text-orange-400;
+}
+
+.hljs-attr {
+  @apply text-plasma-pink;
+}
+
+.hljs-title {
+  @apply text-blue-400;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-carbon-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-carbon-700 rounded hover:bg-plasma-pink;
+}
