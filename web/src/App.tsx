@@ -1,10 +1,45 @@
+import { useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Editor } from './components/Editor';
 import { Preview } from './components/Preview';
 import { AuthModal } from './components/AuthModal';
 import { Notifications } from './components/Notifications';
+import { useAuthStore } from './store/authStore';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 
 function App() {
+  const { setUser } = useAuthStore();
+
+  useEffect(() => {
+    // Check for existing session on mount
+    if (isSupabaseConfigured) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            user_metadata: session.user.user_metadata,
+          });
+        }
+      });
+
+      // Listen for auth changes
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            user_metadata: session.user.user_metadata,
+          });
+        }
+      });
+
+      return () => subscription?.unsubscribe();
+    }
+  }, [setUser]);
+
   return (
     <div className="flex flex-col h-screen bg-carbon-950">
       <Navbar />

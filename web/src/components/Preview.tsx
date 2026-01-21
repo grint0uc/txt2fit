@@ -19,7 +19,7 @@ export function Preview() {
   const totalMinutes = Math.round(totalDuration / 60);
   const totalWatts = currentWorkout.steps.reduce((sum, step) => {
     if (step.power_low_pct !== undefined) {
-      return sum + ((step.power_low_pct + (step.power_high_pct || step.power_low_pct)) / 2) * ftp * step.duration_seconds;
+      return sum + ((step.power_low_pct + (step.power_high_pct || step.power_low_pct)) / 2 / 100) * ftp * step.duration_seconds;
     }
     return sum;
   }, 0);
@@ -33,7 +33,7 @@ export function Preview() {
 
   const formatPower = (pct: number | undefined): string => {
     if (pct === undefined) return '—';
-    return `${Math.round(pct * ftp)}W (${pct}%)`;
+    return `${Math.round((pct / 100) * ftp)}W (${pct}%)`;
   };
 
   return (
@@ -80,8 +80,8 @@ function StepRow({ step, index, ftp }: StepRowProps) {
   };
 
   const formatPower = (pct: number | undefined): string => {
-    if (pct === undefined) return 'Open';
-    const watts = Math.round(pct * ftp);
+    if (pct === undefined) return '—';
+    const watts = Math.round((pct / 100) * ftp);
     return `${watts}W (${pct}%)`;
   };
 

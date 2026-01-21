@@ -35,12 +35,12 @@ export function Editor() {
         <p className="text-xs text-carbon-400 mb-2 font-medium">Format Guide:</p>
         <ul className="text-xs text-carbon-300 space-y-1 font-mono">
           <li>• <span className="text-plasma-pink">10min</span> - Duration (s, min, h)</li>
-          <li>• <span className="text-plasma-pink">90% FTP</span> - Power target</li>
+          <li>• <span className="text-plasma-pink">90% FTP</span> - Power target (required)</li>
           <li>• <span className="text-plasma-pink">85-95% FTP</span> - Power range</li>
-          <li>• <span className="text-plasma-pink">@90rpm</span> - Cadence target</li>
+          <li>• <span className="text-plasma-pink">@90rpm</span> - Cadence target (optional)</li>
           <li>• <span className="text-plasma-pink">"note"</span> - Step instructions</li>
           <li>• <span className="text-plasma-pink">3x 5min</span> - Repeat 3 times</li>
-          <li>• <span className="text-plasma-pink">warmup, cooldown, recovery</span> - Special blocks</li>
+          <li>• <span className="text-plasma-pink">warmup, cooldown, recovery</span> - Auto power blocks</li>
         </ul>
       </div>
     </div>

@@ -3,7 +3,6 @@ export enum StepType {
   STEADY = 'STEADY',
   RAMP = 'RAMP',
   RANGE = 'RANGE',
-  OPEN = 'OPEN',
   WARMUP = 'WARMUP',
   COOLDOWN = 'COOLDOWN',
   RECOVERY = 'RECOVERY',
@@ -15,7 +14,6 @@ export enum TargetType {
   POWER = 'POWER',
   HEART_RATE = 'HEART_RATE',
   CADENCE = 'CADENCE',
-  OPEN = 'OPEN',
 }
 
 // Intensity Levels

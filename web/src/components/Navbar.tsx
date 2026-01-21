@@ -1,11 +1,24 @@
 import { FiLogIn, FiLogOut, FiUser } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { DownloadButton } from './DownloadButton';
 
 export function Navbar() {
   const { user, logout } = useAuthStore();
-  const { openAuthModal } = useUIStore();
+  const { openAuthModal, showNotification } = useUIStore();
+
+  const handleLogout = async () => {
+    try {
+      if (isSupabaseConfigured) {
+        await supabase.auth.signOut();
+      }
+      logout();
+      showNotification('success', 'Logged out successfully');
+    } catch (error) {
+      showNotification('error', 'Logout failed');
+    }
+  };
 
   return (
     <nav className="border-b border-carbon-800 bg-carbon-900 sticky top-0 z-40">
@@ -35,7 +48,7 @@ export function Navbar() {
                 <span className="hidden sm:inline">{user.email}</span>
               </div>
               <button
-                onClick={() => logout()}
+                onClick={handleLogout}
                 className="btn-ghost flex items-center gap-2 text-sm"
               >
                 <FiLogOut size={16} />
