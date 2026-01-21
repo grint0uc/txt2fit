@@ -118,25 +118,26 @@ export function WorkoutGraph({ steps, ftp }: WorkoutGraphProps) {
                   />
                   {/* Tooltip */}
                   <foreignObject
-                    x={x + width / 2 - 60}
+                    x={x + width / 2 - 90}
                     y="10"
-                    width="120"
-                    height="60"
+                    width="180"
+                    height="80"
                     className="pointer-events-none opacity-0 peer-hover:opacity-100 transition-opacity"
                   >
-                    <div className="bg-carbon-950 border border-carbon-700 rounded px-2 py-1 text-xs whitespace-nowrap shadow-lg">
-                      <div className="font-bold text-carbon-200">
+                    <div className="bg-carbon-950 border-2 border-plasma-pink rounded-lg px-3 py-2 text-sm whitespace-nowrap shadow-2xl">
+                      <div className="font-bold text-plasma-pink text-base mb-1">
                         Step {idx + 1}
                       </div>
-                      <div className="text-carbon-400">
-                        {Math.floor(step.duration_seconds / 60)}:{(step.duration_seconds % 60).toString().padStart(2, '0')}
+                      <div className="text-carbon-300 mb-0.5">
+                        Duration: {Math.floor(step.duration_seconds / 60)}:{(step.duration_seconds % 60).toString().padStart(2, '0')}
                       </div>
-                      <div className="text-carbon-300">
+                      <div className="text-carbon-100 font-medium">
                         {lowPct === highPct ? (
-                          <>{Math.round((lowPct / 100) * ftp)}W ({lowPct}%)</>
+                          <>Power: {Math.round((lowPct / 100) * ftp)}W ({lowPct}%)</>
                         ) : (
                           <>
                             {Math.round((lowPct / 100) * ftp)}W → {Math.round((highPct / 100) * ftp)}W
+                            <div className="text-xs text-carbon-400">({lowPct}% → {highPct}% FTP)</div>
                           </>
                         )}
                       </div>
