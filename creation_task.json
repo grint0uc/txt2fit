@@ -1,0 +1,389 @@
+{
+  "project": {
+    "name": "txt2fit Web App",
+    "description": "Web-based FIT workout file generator with user accounts and saved workouts",
+    "status": "planning",
+    "version": "0.1.0"
+  },
+  "stack": {
+    "frontend": {
+      "framework": "React",
+      "language": "TypeScript",
+      "stateManagement": "Zustand",
+      "styling": "Tailwind CSS",
+      "syntax_highlighting": "highlight.js or Prism.js",
+      "file_export": "file-saver"
+    },
+    "backend": {
+      "auth": "Supabase Authentication (Email)",
+      "database": "Supabase (PostgreSQL)",
+      "hosting": "Vercel",
+      "api": "Supabase REST API"
+    },
+    "build_tools": {
+      "bundler": "Vite or Next.js",
+      "package_manager": "npm/pnpm",
+      "linting": "ESLint",
+      "formatting": "Prettier"
+    }
+  },
+  "design_system": {
+    "theme": "Dark Carbon with Pink Accents",
+    "inspiration": "Scott Sports Plasma bicycle - modern, sleek, high-performance",
+    "colors": {
+      "background": {
+        "primary": "#0a0a0a",
+        "secondary": "#1a1a1a",
+        "tertiary": "#2a2a2a"
+      },
+      "text": {
+        "primary": "#ffffff",
+        "secondary": "#d4d4d4",
+        "tertiary": "#a0a0a0"
+      },
+      "accent": {
+        "primary": "#ff1493",
+        "light": "#ff69b4",
+        "dark": "#c4006f"
+      },
+      "status": {
+        "success": "#4ade80",
+        "error": "#f87171",
+        "warning": "#facc15",
+        "info": "#60a5fa"
+      }
+    },
+    "typography": {
+      "fontFamily": "Inter, system-ui, sans-serif",
+      "headings": "Bold, 1.2-1.5x larger",
+      "body": "Regular, 0.95-1rem"
+    },
+    "components": {
+      "buttons": "Rounded corners, pink on dark background, smooth transitions",
+      "inputs": "Dark background, light border on focus, syntax highlighting in editor",
+      "cards": "Subtle elevation, dark background (#1a1a1a), pink accent borders on hover",
+      "modals": "Frosted glass effect (backdrop blur), dark overlay"
+    }
+  },
+  "file_structure": {
+    "root": {
+      "src/": {
+        "components/": {
+          "Editor.tsx": "Workout text input with syntax highlighting",
+          "Preview.tsx": "Real-time workout breakdown display",
+          "DownloadButton.tsx": "Download FIT file button",
+          "AuthModal.tsx": "Login/signup modal",
+          "SaveWorkoutModal.tsx": "Save to account dialog",
+          "Navbar.tsx": "Navigation with auth state",
+          "Layout.tsx": "Main layout wrapper"
+        },
+        "pages/": {
+          "index.tsx": "Main generator page",
+          "dashboard.tsx": "User dashboard (future)",
+          "workouts.tsx": "Saved workouts (future)"
+        },
+        "lib/": {
+          "fit-generator.ts": "TypeScript port of workout_creator.py - FIT generation logic",
+          "fit-types.ts": "TypeScript interfaces for FIT format",
+          "workout-parser.ts": "Parse workout text into structured format",
+          "supabase.ts": "Supabase client initialization"
+        },
+        "store/": {
+          "authStore.ts": "Zustand store for authentication state",
+          "workoutStore.ts": "Zustand store for current workout",
+          "uiStore.ts": "Zustand store for UI state (modals, notifications)"
+        },
+        "types/": {
+          "index.ts": "Shared TypeScript types"
+        },
+        "styles/": {
+          "globals.css": "Global Tailwind config & custom CSS",
+          "theme.css": "Theme colors and design tokens"
+        },
+        "App.tsx": "Main app component",
+        "main.tsx": "Entry point"
+      },
+      "public/": {
+        "favicon.ico": "Site favicon"
+      },
+      "tailwind.config.js": "Tailwind configuration with custom theme",
+      "tsconfig.json": "TypeScript config",
+      "vite.config.ts": "Vite build config (or next.config.js if using Next.js)",
+      "package.json": "Dependencies",
+      ".env.example": "Environment variables template",
+      ".gitignore": "Git ignore rules",
+      "README.md": "Setup instructions"
+    }
+  },
+  "implementation_phases": {
+    "phase_1_setup": {
+      "name": "Project Initialization & Setup",
+      "duration": "1-2 hours",
+      "tasks": [
+        "Create Vite + React + TypeScript project",
+        "Install dependencies (Tailwind, Zustand, Supabase, syntax highlighter)",
+        "Set up Tailwind with custom dark/pink theme",
+        "Configure Supabase project and environment variables",
+        "Set up ESLint and Prettier",
+        "Create git repository structure"
+      ]
+    },
+    "phase_2_core_ui": {
+      "name": "Core UI Components",
+      "duration": "3-4 hours",
+      "tasks": [
+        "Build Editor component with syntax highlighting",
+        "Create Preview component to show workout breakdown",
+        "Design Navbar with auth toggle",
+        "Build responsive layout",
+        "Implement dark theme with pink accents",
+        "Add basic styling and animations"
+      ]
+    },
+    "phase_3_fit_generator": {
+      "name": "FIT File Generator (TypeScript Port)",
+      "duration": "4-6 hours",
+      "tasks": [
+        "Port workout_creator.py parsing logic to TypeScript",
+        "Implement FIT protocol encoding in TypeScript",
+        "Create fit-types.ts with binary data structures",
+        "Build FitFileBuilder equivalent in TypeScript",
+        "Test with example workouts from original project",
+        "Optimize for browser performance"
+      ]
+    },
+    "phase_4_state_management": {
+      "name": "Zustand State Stores",
+      "duration": "2 hours",
+      "tasks": [
+        "Create authStore for user session",
+        "Create workoutStore for current workout data",
+        "Create uiStore for modals/notifications",
+        "Connect stores to components",
+        "Add localStorage persistence for draft workouts"
+      ]
+    },
+    "phase_5_auth_integration": {
+      "name": "Supabase Authentication",
+      "duration": "2-3 hours",
+      "tasks": [
+        "Set up Supabase email auth",
+        "Create AuthModal component (login/signup)",
+        "Implement auth state management in authStore",
+        "Add protected routes/UI for authenticated users",
+        "Test email verification flow",
+        "Add logout functionality"
+      ]
+    },
+    "phase_6_save_feature": {
+      "name": "Save & Load Workouts",
+      "duration": "2-3 hours",
+      "tasks": [
+        "Create Supabase table schema for workouts",
+        "Build SaveWorkoutModal component",
+        "Implement save-to-database functionality",
+        "Add load-from-database functionality",
+        "Create basic workout history view",
+        "Handle unauthenticated save prompts"
+      ]
+    },
+    "phase_7_download": {
+      "name": "Download FIT Files",
+      "duration": "1 hour",
+      "tasks": [
+        "Create DownloadButton component",
+        "Implement browser file download",
+        "Add success/error notifications",
+        "Test with actual cycling computers (optional)"
+      ]
+    },
+    "phase_8_deployment": {
+      "name": "Deployment to Vercel",
+      "duration": "1 hour",
+      "tasks": [
+        "Connect GitHub repo to Vercel",
+        "Set environment variables in Vercel dashboard",
+        "Configure custom domain (optional)",
+        "Set up CI/CD pipeline",
+        "Test production build",
+        "Monitor errors with Sentry (optional)"
+      ]
+    },
+    "phase_9_polish": {
+      "name": "Polish & Testing",
+      "duration": "2-3 hours",
+      "tasks": [
+        "Cross-browser testing",
+        "Mobile responsiveness check",
+        "Performance optimization",
+        "Error boundary implementation",
+        "User feedback notifications",
+        "Documentation/README"
+      ]
+    }
+  },
+  "dependencies": {
+    "core": [
+      "react@^18",
+      "react-dom@^18",
+      "typescript@^5"
+    ],
+    "styling": [
+      "tailwindcss@^3",
+      "postcss@^8",
+      "autoprefixer@^10"
+    ],
+    "state": [
+      "zustand@^4"
+    ],
+    "backend": [
+      "@supabase/supabase-js@^2"
+    ],
+    "ui_tools": [
+      "highlight.js@^11 (or prism.js)",
+      "file-saver@^2",
+      "react-icons@^4"
+    ],
+    "dev": [
+      "vite@^4",
+      "eslint@^8",
+      "prettier@^3",
+      "@typescript-eslint/eslint-plugin@^6",
+      "@typescript-eslint/parser@^6"
+    ]
+  },
+  "implementation_flow": [
+    {
+      "step": 1,
+      "title": "User visits website",
+      "components": ["Navbar", "Layout"],
+      "description": "Load landing page with editor"
+    },
+    {
+      "step": 2,
+      "title": "Input workout text with syntax highlighting",
+      "components": ["Editor"],
+      "description": "Real-time syntax highlighting and validation"
+    },
+    {
+      "step": 3,
+      "title": "Real-time preview generation",
+      "components": ["Preview"],
+      "description": "Show workout breakdown as user types"
+    },
+    {
+      "step": 4,
+      "title": "Generate FIT file (client-side)",
+      "components": ["fit-generator.ts"],
+      "description": "TypeScript FIT generator creates binary file in browser"
+    },
+    {
+      "step": 5,
+      "title": "Download FIT file",
+      "components": ["DownloadButton"],
+      "description": "User downloads generated FIT file to device"
+    },
+    {
+      "step": 6,
+      "title": "Optional: Save to account",
+      "components": ["AuthModal", "SaveWorkoutModal"],
+      "description": "Prompt auth if not logged in, save workout to Supabase"
+    },
+    {
+      "step": 7,
+      "title": "Future: Dashboard & features",
+      "components": ["Dashboard", "GraphDisplay", "AICoach"],
+      "description": "User saved workouts, analytics, AI coaching (phase 2)"
+    }
+  ],
+  "key_decisions": {
+    "typescript_port": {
+      "decision": "Create lightweight TypeScript port instead of using Pyodide",
+      "reasoning": "Faster performance, smaller bundle, native TypeScript integration, better browser compatibility"
+    },
+    "client_side_generation": {
+      "decision": "Generate FIT files entirely in the browser",
+      "reasoning": "No server needed, instant feedback, privacy (data stays local), scalable to any number of users"
+    },
+    "zustand_over_redux": {
+      "decision": "Use Zustand instead of Redux for state",
+      "reasoning": "Simpler boilerplate, faster to implement, perfect for medium-complexity app"
+    },
+    "supabase_over_firebase": {
+      "decision": "Use Supabase instead of Firebase",
+      "reasoning": "PostgreSQL for complex future queries, more flexibility, better for athlete data/analytics later"
+    }
+  },
+  "future_phases": {
+    "phase_2_dashboard": {
+      "name": "User Dashboard & Workout History",
+      "features": [
+        "View all saved workouts",
+        "Edit existing workouts",
+        "Delete workouts",
+        "Share workouts via link"
+      ]
+    },
+    "phase_3_analytics": {
+      "name": "Graphs & Analytics",
+      "features": [
+        "Visualize workout power curve",
+        "Show intensity distribution",
+        "Estimate training load",
+        "Duration breakdown chart"
+      ]
+    },
+    "phase_4_ai_coach": {
+      "name": "AI Cycling Coach",
+      "features": [
+        "Suggest workouts based on goals",
+        "Generate training plans",
+        "Analyze completed workouts",
+        "Personalized recommendations"
+      ]
+    },
+    "phase_5_device_sync": {
+      "name": "Device Integration",
+      "features": [
+        "Direct upload to Karoo/Wahoo",
+        "Sync completed workout data",
+        "Real-time coaching during workout"
+      ]
+    }
+  },
+  "development_tips": {
+    "local_setup": [
+      "Clone repo and run: npm install",
+      "Copy .env.example to .env.local and fill in Supabase keys",
+      "Run: npm run dev",
+      "Visit: http://localhost:5173"
+    ],
+    "testing_fit_generation": [
+      "Use the example workouts from original project as test cases",
+      "Download generated FIT files and verify with existing cycling computers",
+      "Test edge cases: very short/long workouts, extreme power targets, repeats"
+    ],
+    "performance_optimization": [
+      "Lazy load components with React.lazy()",
+      "Memoize expensive computations in FIT generator",
+      "Use web workers for large FIT file generation (future optimization)",
+      "Optimize bundle size - tree-shake unused code"
+    ],
+    "deployment_checklist": [
+      "Set all environment variables in Vercel",
+      "Enable CORS if needed for Supabase",
+      "Test auth flow in production",
+      "Monitor error logs in Vercel dashboard",
+      "Set up automatic deployments from main branch"
+    ]
+  },
+  "success_criteria": [
+    "Users can input workout text and generate FIT files",
+    "Download FIT files work on cycling computers (Karoo, Wahoo, etc.)",
+    "User authentication via email works",
+    "Save/load workouts from database works",
+    "Site loads in <2 seconds",
+    "Mobile responsive on all devices",
+    "Zero console errors in production"
+  ]
+}
