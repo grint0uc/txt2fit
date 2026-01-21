@@ -1,121 +1,95 @@
-# FIT Workout Creator
+# WattScript
 
-A robust, production-ready Python tool for creating `.FIT` workout files for bike trainers from simple text input. Designed for **Hammerhead Karoo** + **Cycplus T3** (ANT+ FE-C) and compatible with most cycling computers.
+**Script power-based cycling workouts and download FIT files for Garmin, Wahoo, and Hammerhead devices.**
 
-## Features
+WattScript is a modern workout creation platform for cyclists. Write workouts in simple text format and generate industry-standard FIT files compatible with all major cycling computers and smart trainers.
 
-| Feature | Description |
-|---------|-------------|
-| **Power Targets** | % FTP with ERG mode trainer control |
-| **Cadence Targets** | Secondary target displayed alongside power |
-| **Heart Rate Targets** | Absolute (bpm) or % of max HR |
-| **Open Intervals** | Free ride sections for FTP tests |
-| **Ramps** | Progressive power from start to end |
-| **Power Ranges** | Target zone (e.g., 85-95% FTP) |
-| **Step Notes** | Instructions displayed on device |
-| **Repeat Blocks** | `3x` syntax for interval sets |
-| **Auto Warmup/Cooldown** | Sensible defaults with one keyword |
-| **Intensity Classification** | Proper FIT intensity tags |
+---
 
-## Installation
+## 🌐 Web App (Recommended)
+
+**Live at:** [wattscript.vercel.app](https://wattscript.vercel.app) *(or your deployed URL)*
+
+- 🎨 Modern React interface with real-time preview
+- 📊 Interactive power profile graph with zone visualization
+- 💾 Download FIT files instantly
+- 🔄 Progressive power ramps (85-95% FTP)
+- 🎯 Full power zone support with color coding
+- 📱 Responsive design for desktop and mobile
+
+### Quick Start (Web)
+
+1. Visit the web app
+2. Set your FTP (Functional Threshold Power)
+3. Write your workout using the text format:
+   ```
+   warmup 10min
+   5min 85-95% FTP "ramp up"
+   3x 5min 95% FTP @90rpm
+   cooldown 5min
+   ```
+4. Download the FIT file
+5. Upload to your cycling computer
+
+---
+
+## 🐍 Python CLI (Advanced)
+
+For automation, scripting, or programmatic workout generation.
+
+### Installation
 
 ```bash
 pip install fit-tool
 ```
 
-Download `workout_creator.py` to your preferred location.
+### Usage
 
-## Quick Start
-
-1. Create a workout file (`my_workout.txt`):
-```
-warmup 10min
-3x 5min 95% FTP @90rpm "Hold steady"
-2min 50% FTP
-cooldown 5min
-```
-
-2. Generate the FIT file:
 ```bash
-python workout_creator.py my_workout.txt -o my_workout.fit --name "Threshold Intervals"
+python workout_creator.py my_workout.txt -o output.fit --name "Threshold Intervals"
 ```
 
-3. Upload to Hammerhead Dashboard or copy to device
+See [Python CLI Documentation](#python-cli-reference) below for full details.
 
 ---
 
-## Input Format Reference
+## 📝 Workout Text Format
+
+### Basic Structure
+
+```
+<duration> <power> [cadence] ["notes"] [repeats]
+```
 
 ### Duration
-| Format | Example | Result |
-|--------|---------|--------|
-| Seconds | `30s`, `45sec` | 30/45 seconds |
-| Minutes | `5min`, `10m` | 5/10 minutes |
-| Hours | `1h`, `1.5hr` | 1/1.5 hours |
+- `30s`, `45sec` - Seconds
+- `5min`, `10m` - Minutes
+- `1h`, `1.5hr` - Hours
 
 ### Power Targets
-| Format | Example | Description |
-|--------|---------|-------------|
-| Steady | `80% FTP` | Constant power |
-| Range | `85-95% FTP` | Target zone |
-| Ramp | `50% - 80% FTP` | Progressive increase |
+- `90% FTP` - Steady power
+- `85-95% FTP` - Progressive ramp (increases from 85% to 95%)
+- `@90rpm` - Optional cadence target
 
-### Cadence Targets (Secondary)
-| Format | Example | Description |
-|--------|---------|-------------|
-| Single | `@90rpm` | Target 90 RPM |
-| Range | `@85-95rpm` | Target 85-95 RPM |
-
-### Heart Rate Targets
-| Format | Example | Description |
-|--------|---------|-------------|
-| Absolute | `150 bpm` | Target 150 BPM |
-| Absolute range | `140-160 bpm` | Target 140-160 BPM |
-| % Max HR | `75% HR` | 75% of max HR |
-| % Range | `70-80% HR` | 70-80% of max HR |
-
-### Step Notes
-```
-5min 100% FTP "Hold it steady!"
-3min 120% FTP "Push through the burn"
-```
-Notes appear on the device display during the interval.
-
-### Special Blocks
-| Keyword | Power | Description |
-|---------|-------|-------------|
-| `warmup` | 40→75% FTP | Gradual ramp up |
-| `cooldown` | 65→40% FTP | Gradual ramp down |
-| `recovery` | 50% FTP | Easy spinning |
-| `open` / `free` | No target | Free ride |
+### Special Keywords
+- `warmup 10min` - Auto 40→75% FTP ramp
+- `cooldown 5min` - Auto 65→40% FTP ramp
+- `recovery 3min` - 50% FTP easy spin
 
 ### Repeats
-```
-3x 5min 100% FTP    # Repeat 3 times
-5x 1min 120% FTP    # 5 hard efforts
-```
+- `3x 5min 95% FTP` - Repeat 3 times
+- `5x 1min 120% FTP` - 5 hard efforts
 
-### Intensity Keywords
-Add these to any line to override automatic classification:
-- `warmup`, `cooldown` - Warm-up/cool-down
-- `recovery`, `rest`, `easy` - Recovery
-- `endurance`, `tempo`, `threshold`, `sweetspot` - Active
-- `vo2`, `vo2max`, `interval`, `sprint`, `anaerobic` - High intensity
-
-### Comments
-```
-# This is a comment
-// This is also a comment
-```
+### Notes
+- `5min 100% FTP "Hold it steady!"` - Shows on device display
 
 ---
 
-## Example Workouts
+## 📊 Example Workouts
 
 ### Sweet Spot 3x15
 ```
 warmup 10min
-2min 60% FTP
 3x 15min 88% FTP @85-95rpm "Stay smooth"
 2min 50% FTP
 cooldown 5min
@@ -129,234 +103,257 @@ warmup 15min
 cooldown 10min
 ```
 
-### Cadence Pyramid (Leg Speed)
+### Progressive Ramp
 ```
 warmup 10min
-2min 70% FTP @100rpm "Smooth"
-2min 70% FTP @110rpm "Relax"
-2min 70% FTP @120rpm "Quick feet!"
-recovery 3min
-2min 70% FTP @110rpm
-2min 70% FTP @100rpm
+10min 70-95% FTP "Build gradually"
+5min 50% FTP
 cooldown 5min
 ```
 
-### Low Cadence Force Work
-```
-warmup 10min
-3x 5min 85% FTP @55-60rpm "Big gear, seated"
-3min 50% FTP @90rpm
-cooldown 5min
-```
+More examples in [`examples/`](./examples/)
 
-### FTP Test (20 minute)
-```
-warmup 20min
-5min 100% FTP "Blow out the legs"
-10min 50% FTP
-5min open "Get ready"
-20min open "All out effort!"
-cooldown 15min
-```
+---
 
-### Heart Rate Endurance
-```
-warmup 15min
-45min 65-75% HR @85-95rpm "Zone 2 - conversational"
-cooldown 10min
-```
+## 🏗️ Project Structure
 
-### Over-Under Threshold
 ```
-warmup 15min
-3x 8min 95% FTP @90rpm "Under"
-2min 105% FTP @95rpm "Over"
-recovery 5min
-cooldown 10min
+WattScript/
+├── web/                    # React web application
+│   ├── src/
+│   │   ├── components/     # UI components (Navbar, Editor, Preview, Graph)
+│   │   ├── lib/            # Core logic (parser, FIT generator)
+│   │   ├── store/          # Zustand state management
+│   │   └── types/          # TypeScript types
+│   ├── package.json
+│   └── README.md           # Web app setup guide
+│
+├── examples/               # Example workout files
+│   ├── sweetspot_3x10.txt
+│   ├── cadence_pyramid.txt
+│   └── *.fit               # Pre-generated FIT files
+│
+├── docs/                   # Documentation
+│   ├── VERCEL_SETUP.md     # Deployment guide
+│   ├── creation_task.json  # Initial design spec
+│   └── future_functions_task.json  # Roadmap
+│
+├── workout_creator.py      # Python CLI tool
+├── requirements.txt        # Python dependencies
+└── README.md              # This file
 ```
 
 ---
 
-## CLI Usage
+## 🚀 Development
+
+### Web App
 
 ```bash
-# Basic usage
-python workout_creator.py workout.txt -o output.fit
-
-# With workout name
-python workout_creator.py workout.txt -o output.fit --name "My Workout"
-
-# Verbose mode with FTP/HR reference
-python workout_creator.py workout.txt -v --ftp 250 --max-hr 185
-
-# From stdin
-echo "10min 90% FTP @90rpm" | python workout_creator.py - -o quick.fit
+cd web
+npm install
+npm run dev
 ```
 
-### Arguments
+Visit `http://localhost:5173`
 
-| Argument | Description |
-|----------|-------------|
-| `input` | Input file path or `-` for stdin |
-| `-o, --output` | Output .FIT file path |
-| `-n, --name` | Workout name (shown on device) |
-| `--ftp` | Your FTP in watts (for verbose display) |
-| `--max-hr` | Your max HR in bpm (for verbose display) |
-| `-v, --verbose` | Show detailed workout breakdown |
+### Environment Variables
+
+Create `web/.env.local`:
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_key
+```
+
+See [`web/README.md`](./web/README.md) for details.
 
 ---
 
-## Device Compatibility
+## 📱 Device Compatibility
 
-### Tested
+### Tested & Working
 - ✅ Hammerhead Karoo 2/3
 - ✅ Cycplus T3 (ANT+ FE-C)
+- ✅ Vercel deployment
 
 ### Should Work
 - Garmin Edge series
 - Wahoo ELEMNT/BOLT
 - Any ANT+ FE-C smart trainer
 
-### Karoo-Specific Notes
-- Upload via [Hammerhead Dashboard](https://dashboard.hammerhead.io) → Workouts → Add Workout
-- Or copy `.fit` file directly to device
-- Power targets control ERG mode automatically
-- Cadence shows as secondary target
-- Notes display during intervals
+---
+
+## 🛠️ Tech Stack
+
+### Web App
+- **React 18** + TypeScript
+- **Vite** - Build tool
+- **Tailwind CSS** - Carbon/plasma pink theme
+- **Zustand** - State management
+- **Supabase** - Authentication (optional)
+- **Vercel** - Deployment
+
+### FIT File Generation
+- TypeScript port of Python FIT encoder
+- Binary protocol implementation
+- CRC16 validation
+- Supports power, HR, cadence targets
 
 ---
 
-## Technical Details
+## 🎯 Power Zones
 
-### FIT Protocol
+WattScript uses standard cycling power zones with custom color coding:
 
-**Power encoding**: FIT uses 0-1000 scale for % FTP
-- 0 = 0% FTP
-- 500 = 50% FTP  
-- 1000 = 100% FTP
-
-**Heart rate encoding**:
-- % of max: 0-100 direct value
-- Absolute: 100 + BPM (e.g., 150 BPM = 250)
-
-**Repeat blocks**: Uses `REPEAT_UNTIL_STEPS_CMPLT` duration type
-
-### File Structure
-```
-FIT Header
-├── FileIdMessage (type=WORKOUT)
-├── WorkoutMessage (name, sport, step count)
-└── WorkoutStepMessage[] (intervals)
-    ├── duration_type, duration_time
-    ├── target_type (POWER/HEART_RATE/CADENCE/OPEN)
-    ├── custom_target_*_low/high
-    ├── custom_target_cadence_low/high (secondary)
-    ├── intensity
-    └── notes
-```
+| Zone | % FTP | Color | Intensity |
+|------|-------|-------|-----------|
+| Recovery | < 55% | Light Purple | Easy spin |
+| Endurance | 55-75% | Purple-Pink | Zone 2 |
+| Tempo | 75-90% | Light Pink | Zone 3 |
+| Threshold | 90-105% | Plasma Pink | FTP |
+| VO2max | 105-120% | Hot Pink | Hard |
+| Anaerobic | > 120% | Red | Max effort |
 
 ---
 
-## API Usage
+## 🐍 Python CLI Reference
+
+### Installation
+```bash
+pip install fit-tool
+```
+
+### Basic Usage
+```bash
+# Generate FIT file
+python workout_creator.py workout.txt -o output.fit
+
+# With workout name
+python workout_creator.py workout.txt -o output.fit --name "My Workout"
+
+# Verbose mode with FTP reference
+python workout_creator.py workout.txt -v --ftp 250 --max-hr 185
+```
+
+### Command Line Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `input` | Input file path or `-` for stdin |
+| `-o, --output` | Output .FIT file path |
+| `-n, --name` | Workout name (shown on device) |
+| `--ftp` | Your FTP in watts (for display only) |
+| `--max-hr` | Your max HR in bpm (for display only) |
+| `-v, --verbose` | Show detailed workout breakdown |
+
+### Python API
 
 ```python
-from workout_creator import create_workout_fit, Workout, WorkoutStep, StepType, TargetType
+from workout_creator import create_workout_fit
 
-# From text
 workout_text = """
 warmup 10min
 3x 5min 95% FTP @90rpm
 cooldown 5min
 """
+
 fit_bytes = create_workout_fit(workout_text, "My Workout", "output.fit")
-
-# Programmatic
-steps = [
-    WorkoutStep(
-        step_type=StepType.STEADY,
-        duration_seconds=600,
-        target_type=TargetType.POWER,
-        power_low_pct=90,
-        power_high_pct=90,
-        cadence_low=90,
-        cadence_high=95,
-        name="Threshold",
-        notes="Hold it!"
-    ),
-]
-workout = Workout("Custom", steps)
-builder = FitWorkoutBuilder(workout)
-fit_bytes = builder.build()
 ```
 
 ---
 
-## Project Structure
+## 🔧 Technical Details
 
+### FIT Protocol Encoding
+
+**Power (% FTP):**
+- Uses 0-100 scale directly
+- `50% FTP` = 50 in FIT file
+- `100% FTP` = 100 in FIT file
+
+**Ramps:**
+- Encoded as `custom_target_value_low` and `custom_target_value_high`
+- Device interpolates between values over duration
+- `85-95% FTP` = low: 85, high: 95
+
+**Duration:**
+- Stored in seconds
+- `5min` = 300 seconds in FIT file
+
+### File Structure
 ```
-fit_workout_creator/
-├── workout_creator.py      # Main application
-├── requirements.txt        # Dependencies
-├── README.md              # This file
-└── examples/
-    ├── sweetspot_3x10.txt/.fit
-    ├── vo2max_5x3.txt/.fit
-    ├── ramp_test.txt/.fit
-    ├── over_under.txt/.fit
-    ├── cadence_pyramid.txt/.fit
-    └── hr_endurance.txt/.fit
+FIT Header (14 bytes)
+├── FileIdMessage (workout type)
+├── WorkoutMessage (name, sport, step count)
+└── WorkoutStepMessage[] (intervals)
+    ├── duration_type, duration_value
+    ├── target_type (POWER/HEART_RATE/CADENCE)
+    ├── custom_target_value_low/high
+    ├── intensity
+    └── notes
+CRC16 (2 bytes)
 ```
 
 ---
 
-## Troubleshooting
+## 🗺️ Roadmap
 
-### Workout doesn't appear on Karoo
-- Ensure file extension is `.fit`
-- Upload via Dashboard, not direct file copy (more reliable)
-- Check workout sport is "Cycling" not "Mountain Bike"
+See [`docs/future_functions_task.json`](./docs/future_functions_task.json) for detailed roadmap.
 
-### ERG mode not controlling trainer
-- Connect trainer as "Controllable" not just "Power"
-- Verify ANT+ FE-C connection (not Bluetooth power)
-- Check trainer is in ERG mode, not resistance/slope
+**Phase 1 (Current):**
+- ✅ Text-to-FIT conversion
+- ✅ Web interface
+- ✅ Power ramps
+- ✅ Interactive graph visualization
+- ✅ Download FIT files
 
-### Cadence target not showing
-- Karoo shows cadence as secondary target
-- Primary must be power or HR
-- Check workout has cadence values in FIT file
+**Phase 2 (Planned):**
+- 🔄 Save workouts to database
+- 🔄 Heart rate targets
+- 🔄 Workout library/templates
+- 🔄 User accounts
 
-### Power seems wrong
-- FIT uses % FTP, device calculates watts
-- Verify FTP is set correctly on device
-- Some trainers have ±5% tolerance
-
-### Values 10x too large/small
-If power, HR, or duration values appear significantly off by a factor of 10, check the FIT scaling constants in `workout_creator.py`:
-```python
-FTP_SCALE = 1              # multiply % by this to get FIT value
-HR_ABSOLUTE_OFFSET = 100   # offset for absolute HR values
-DURATION_MS_SCALE = 1000   # duration in milliseconds in FIT protocol
-```
-These map workout percentages/values to FIT protocol encoding. If values are consistently 10x off on your device, these constants may need adjustment for your specific trainer/device combination.
+**Phase 3 (Future):**
+- 🤖 AI workout recommendations
+- 📊 Training plan builder
+- 📈 Performance analytics
+- 🔗 Device sync integration
 
 ---
 
-## Future Plans
+## 📄 License
 
-This tool is part of a workout management system:
-
-1. ✅ **Create workouts** - This tool
-2. 🔄 **Upload to device** - Manual (Dashboard/USB)
-3. 📊 **Analyze completed workouts** - Coming soon
-4. 🤖 **AI workout recommendations** - Coming soon
+MIT License - Free to use and modify.
 
 ---
 
-## License
+## 🤝 Contributing
 
-MIT License - free to use and modify.
+Issues and PRs welcome! Please:
+- Check existing issues first
+- Follow the existing code style
+- Add tests for new features
+- Update documentation
 
-## Contributing
+---
 
-Issues and PRs welcome!
+## 📚 Documentation
+
+- [Web App Setup](./web/README.md)
+- [Vercel Deployment](./docs/VERCEL_SETUP.md)
+- [Design Spec](./docs/creation_task.json)
+- [Future Features](./docs/future_functions_task.json)
+
+---
+
+## 🙋 Support
+
+Having issues? Check:
+1. [GitHub Issues](https://github.com/grint0uc/txt2fit/issues)
+2. Ensure FTP is set on your device
+3. Verify FIT file uploaded correctly
+4. Check device compatibility list
+
+---
+
+**Made with ❤️ for cyclists by cyclists**
