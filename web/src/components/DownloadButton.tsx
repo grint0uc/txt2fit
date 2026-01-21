@@ -27,7 +27,7 @@ export function DownloadButton() {
       const fitData = generateFitFile(currentWorkout);
 
       // Create blob and download
-      const blob = new Blob([fitData], { type: 'application/octet-stream' });
+      const blob = new Blob([fitData as BlobPart], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

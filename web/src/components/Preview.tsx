@@ -88,17 +88,6 @@ export function Preview() {
   }, 0) : 0;
   const avgWatts = totalDuration > 0 && ftp ? Math.round(totalWatts / totalDuration) : 0;
 
-  const formatDuration = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return secs > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${mins}min`;
-  };
-
-  const formatPower = (pct: number | undefined): string => {
-    if (pct === undefined || !ftp) return '—';
-    return `${Math.round((pct / 100) * ftp)}W (${pct}%)`;
-  };
-
   return (
     <div className="flex flex-col h-full">
       <h2 className="text-lg font-bold text-carbon-100 mb-4">Workout Preview</h2>
@@ -217,7 +206,7 @@ function StepRow({ step, index, ftp }: StepRowProps) {
   };
 
   const formatPower = (pct: number | undefined): string => {
-    if (pct === undefined) return '—';
+    if (pct === undefined || !ftp) return '—';
     const watts = Math.round((pct / 100) * ftp);
     return `${watts}W (${pct}%)`;
   };

@@ -1,6 +1,5 @@
 import { useWorkoutStore } from '../store/workoutStore';
 import { parseWorkout } from '../lib/workout-parser';
-import type { Workout } from '../types';
 
 export function Editor() {
   const { workoutText, setWorkoutText, setCurrentWorkout } = useWorkoutStore();
