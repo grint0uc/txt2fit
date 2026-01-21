@@ -2,12 +2,43 @@ import { useWorkoutStore } from '../store/workoutStore';
 import type { WorkoutStep } from '../types';
 
 export function Preview() {
-  const { currentWorkout, ftp, max_hr } = useWorkoutStore();
+  const { currentWorkout, ftp, max_hr, setFtp, setMaxHr } = useWorkoutStore();
 
   if (!currentWorkout || currentWorkout.steps.length === 0) {
     return (
       <div className="flex flex-col h-full">
-        <h2 className="text-lg font-bold text-carbon-300 mb-4">Workout Preview</h2>
+        <h2 className="text-lg font-bold text-carbon-300 mb-4">Settings & Preview</h2>
+
+        {/* FTP/Max HR Settings */}
+        <div className="card p-4 mb-4 space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-carbon-400 mb-1">
+              FTP (watts)
+            </label>
+            <input
+              type="number"
+              value={ftp}
+              onChange={(e) => setFtp(Math.max(50, parseInt(e.target.value) || 250))}
+              className="input text-sm"
+              min="50"
+              max="500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-carbon-400 mb-1">
+              Max HR (bpm)
+            </label>
+            <input
+              type="number"
+              value={max_hr}
+              onChange={(e) => setMaxHr(Math.max(100, parseInt(e.target.value) || 185))}
+              className="input text-sm"
+              min="100"
+              max="220"
+            />
+          </div>
+        </div>
+
         <div className="flex-1 flex items-center justify-center text-carbon-500 text-sm">
           No workout parsed yet. Edit the text to see preview.
         </div>
@@ -38,7 +69,37 @@ export function Preview() {
 
   return (
     <div className="flex flex-col h-full">
-      <h2 className="text-lg font-bold text-carbon-100 mb-4">{currentWorkout.name}</h2>
+      <h2 className="text-lg font-bold text-carbon-100 mb-4">Workout Preview</h2>
+
+      {/* FTP/Max HR Settings */}
+      <div className="card p-3 mb-4 space-y-2">
+        <div>
+          <label className="block text-xs font-medium text-carbon-400 mb-1">
+            FTP (watts)
+          </label>
+          <input
+            type="number"
+            value={ftp}
+            onChange={(e) => setFtp(Math.max(50, parseInt(e.target.value) || 250))}
+            className="input text-sm"
+            min="50"
+            max="500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-carbon-400 mb-1">
+            Max HR (bpm)
+          </label>
+          <input
+            type="number"
+            value={max_hr}
+            onChange={(e) => setMaxHr(Math.max(100, parseInt(e.target.value) || 185))}
+            className="input text-sm"
+            min="100"
+            max="220"
+          />
+        </div>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 mb-4">
