@@ -5,11 +5,16 @@ import { useUIStore } from '../store/uiStore';
 import { generateFitFile } from '../lib/fit-generator';
 
 export function DownloadButton() {
-  const { currentWorkout, workoutText } = useWorkoutStore();
+  const { currentWorkout, ftp } = useWorkoutStore();
   const { showNotification } = useUIStore();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDownload = async () => {
+    if (!ftp) {
+      showNotification('error', 'Please set your FTP value first');
+      return;
+    }
+
     if (!currentWorkout || currentWorkout.steps.length === 0) {
       showNotification('error', 'Please create a valid workout first');
       return;
@@ -41,10 +46,13 @@ export function DownloadButton() {
     }
   };
 
+  const isDisabled = isLoading || !ftp || !currentWorkout || currentWorkout.steps.length === 0;
+
   return (
     <button
       onClick={handleDownload}
-      disabled={isLoading || !currentWorkout || currentWorkout.steps.length === 0}
+      disabled={isDisabled}
+      title={!ftp ? 'Set FTP value to download' : ''}
       className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <FiDownload size={18} />

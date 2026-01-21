@@ -1,4 +1,5 @@
 import { useWorkoutStore } from '../store/workoutStore';
+import { FiAlertCircle } from 'react-icons/fi';
 import type { WorkoutStep } from '../types';
 
 export function Preview() {
@@ -13,16 +14,25 @@ export function Preview() {
         <div className="card p-4 mb-4 space-y-3">
           <div>
             <label className="block text-xs font-medium text-carbon-400 mb-1">
-              FTP (watts)
+              FTP (watts) <span className="text-plasma-pink">*</span>
             </label>
             <input
               type="number"
-              value={ftp}
-              onChange={(e) => setFtp(Math.max(50, parseInt(e.target.value) || 250))}
-              className="input text-sm"
+              value={ftp ?? ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFtp(val ? Math.max(50, parseInt(val)) : null);
+              }}
+              placeholder="e.g. 250"
+              className={`input text-sm ${!ftp ? 'border-red-500' : ''}`}
               min="50"
               max="500"
             />
+            {!ftp && (
+              <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                <FiAlertCircle size={12} /> FTP is required
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-medium text-carbon-400 mb-1">
@@ -30,8 +40,12 @@ export function Preview() {
             </label>
             <input
               type="number"
-              value={max_hr}
-              onChange={(e) => setMaxHr(Math.max(100, parseInt(e.target.value) || 185))}
+              value={max_hr ?? ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                setMaxHr(val ? Math.max(100, parseInt(val)) : null);
+              }}
+              placeholder="e.g. 185"
               className="input text-sm"
               min="100"
               max="220"
@@ -48,13 +62,15 @@ export function Preview() {
 
   const totalDuration = currentWorkout.steps.reduce((sum, step) => sum + step.duration_seconds, 0);
   const totalMinutes = Math.round(totalDuration / 60);
-  const totalWatts = currentWorkout.steps.reduce((sum, step) => {
+
+  // Only calculate watts if FTP is set
+  const totalWatts = ftp ? currentWorkout.steps.reduce((sum, step) => {
     if (step.power_low_pct !== undefined) {
       return sum + ((step.power_low_pct + (step.power_high_pct || step.power_low_pct)) / 2 / 100) * ftp * step.duration_seconds;
     }
     return sum;
-  }, 0);
-  const avgWatts = totalDuration > 0 ? Math.round(totalWatts / totalDuration) : 0;
+  }, 0) : 0;
+  const avgWatts = totalDuration > 0 && ftp ? Math.round(totalWatts / totalDuration) : 0;
 
   const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -63,7 +79,7 @@ export function Preview() {
   };
 
   const formatPower = (pct: number | undefined): string => {
-    if (pct === undefined) return '—';
+    if (pct === undefined || !ftp) return '—';
     return `${Math.round((pct / 100) * ftp)}W (${pct}%)`;
   };
 
@@ -75,16 +91,25 @@ export function Preview() {
       <div className="card p-3 mb-4 space-y-2">
         <div>
           <label className="block text-xs font-medium text-carbon-400 mb-1">
-            FTP (watts)
+            FTP (watts) <span className="text-plasma-pink">*</span>
           </label>
           <input
             type="number"
-            value={ftp}
-            onChange={(e) => setFtp(Math.max(50, parseInt(e.target.value) || 250))}
-            className="input text-sm"
+            value={ftp ?? ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              setFtp(val ? Math.max(50, parseInt(val)) : null);
+            }}
+            placeholder="e.g. 250"
+            className={`input text-sm ${!ftp ? 'border-red-500' : ''}`}
             min="50"
             max="500"
           />
+          {!ftp && (
+            <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+              <FiAlertCircle size={12} /> FTP is required to calculate power
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-xs font-medium text-carbon-400 mb-1">
@@ -92,8 +117,12 @@ export function Preview() {
           </label>
           <input
             type="number"
-            value={max_hr}
-            onChange={(e) => setMaxHr(Math.max(100, parseInt(e.target.value) || 185))}
+            value={max_hr ?? ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              setMaxHr(val ? Math.max(100, parseInt(val)) : null);
+            }}
+            placeholder="e.g. 185"
             className="input text-sm"
             min="100"
             max="220"
@@ -101,28 +130,43 @@ export function Preview() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="card p-3 text-center">
-          <p className="text-xs text-carbon-400">Duration</p>
-          <p className="text-lg font-bold text-plasma-pink">{totalMinutes}min</p>
+      {/* Warning if FTP is not set */}
+      {!ftp && (
+        <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 mb-4 flex items-start gap-2">
+          <FiAlertCircle className="text-red-400 flex-shrink-0 mt-0.5" size={16} />
+          <div>
+            <p className="text-sm font-medium text-red-300">FTP Required</p>
+            <p className="text-xs text-red-200">Set your FTP value above to see power calculations</p>
+          </div>
         </div>
-        <div className="card p-3 text-center">
-          <p className="text-xs text-carbon-400">Avg Power</p>
-          <p className="text-lg font-bold text-plasma-pink">{avgWatts}W</p>
-        </div>
-        <div className="card p-3 text-center">
-          <p className="text-xs text-carbon-400">Steps</p>
-          <p className="text-lg font-bold text-plasma-pink">{currentWorkout.steps.length}</p>
-        </div>
-      </div>
+      )}
 
-      {/* Steps */}
-      <div className="flex-1 overflow-y-auto space-y-2">
-        {currentWorkout.steps.map((step, idx) => (
-          <StepRow key={idx} step={step} index={idx + 1} ftp={ftp} />
-        ))}
-      </div>
+      {/* Stats */}
+      {ftp && (
+        <>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="card p-3 text-center">
+              <p className="text-xs text-carbon-400">Duration</p>
+              <p className="text-lg font-bold text-plasma-pink">{totalMinutes}min</p>
+            </div>
+            <div className="card p-3 text-center">
+              <p className="text-xs text-carbon-400">Avg Power</p>
+              <p className="text-lg font-bold text-plasma-pink">{avgWatts}W</p>
+            </div>
+            <div className="card p-3 text-center">
+              <p className="text-xs text-carbon-400">Steps</p>
+              <p className="text-lg font-bold text-plasma-pink">{currentWorkout.steps.length}</p>
+            </div>
+          </div>
+
+          {/* Steps */}
+          <div className="flex-1 overflow-y-auto space-y-2">
+            {currentWorkout.steps.map((step, idx) => (
+              <StepRow key={idx} step={step} index={idx + 1} ftp={ftp} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -130,7 +174,7 @@ export function Preview() {
 interface StepRowProps {
   step: WorkoutStep;
   index: number;
-  ftp: number;
+  ftp: number | null;
 }
 
 function StepRow({ step, index, ftp }: StepRowProps) {

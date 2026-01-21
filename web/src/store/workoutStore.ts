@@ -5,14 +5,14 @@ import type { Workout, WorkoutStep } from '../types';
 interface WorkoutState {
   currentWorkout: Workout | null;
   workoutText: string;
-  ftp: number;
-  max_hr: number;
+  ftp: number | null;
+  max_hr: number | null;
   lastSavedId: string | null;
 
   setWorkoutText: (text: string) => void;
   setCurrentWorkout: (workout: Workout | null) => void;
-  setFtp: (ftp: number) => void;
-  setMaxHr: (max_hr: number) => void;
+  setFtp: (ftp: number | null) => void;
+  setMaxHr: (max_hr: number | null) => void;
   setLastSavedId: (id: string | null) => void;
   resetWorkout: () => void;
   updateWorkoutName: (name: string) => void;
@@ -28,8 +28,8 @@ export const useWorkoutStore = create<WorkoutState>()(
     (set) => ({
       currentWorkout: defaultWorkout,
       workoutText: 'warmup 10min\n3x 5min 95% FTP @90rpm\ncooldown 5min',
-      ftp: 250,
-      max_hr: 185,
+      ftp: null,
+      max_hr: null,
       lastSavedId: null,
 
       setWorkoutText: (text) => set({ workoutText: text }),
