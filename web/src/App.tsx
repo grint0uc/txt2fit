@@ -53,7 +53,7 @@ function App() {
         </div>
 
         {/* Preview Panel */}
-        <div className="w-96 border-l border-carbon-800 overflow-hidden">
+        <div className="w-[600px] border-l border-carbon-800 overflow-hidden">
           <div className="h-full p-6 overflow-y-auto">
             <Preview />
           </div>
