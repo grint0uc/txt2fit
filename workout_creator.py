@@ -51,7 +51,6 @@ class StepType(Enum):
     """Type of workout step."""
     STEADY = auto()      # Constant power target
     RAMP = auto()        # Power ramp from low to high
-    RANGE = auto()       # Power range (target zone)
     OPEN = auto()        # Free ride, no target
     WARMUP = auto()      # Warmup (auto-calculated ramp)
     COOLDOWN = auto()    # Cooldown (auto-calculated ramp)
@@ -169,11 +168,6 @@ class WorkoutParser:
 
     POWER_RAMP_PATTERN = re.compile(
         r'(\d+(?:\.\d+)?)\s*%?\s*[-–—]+\s*(\d+(?:\.\d+)?)\s*%\s*(?:of\s+)?ftp',
-        re.IGNORECASE
-    )
-
-    POWER_RANGE_PATTERN = re.compile(
-        r'(\d+(?:\.\d+)?)\s*[-–—]+\s*(\d+(?:\.\d+)?)\s*%\s*(?:of\s+)?ftp',
         re.IGNORECASE
     )
 
@@ -351,9 +345,8 @@ class WorkoutParser:
             hr_is_pct = False
             hr_target_type = TargetType.HEART_RATE
 
-        # Parse power target (ramp, range, or steady)
+        # Parse power target (ramp or steady)
         ramp_match = self.POWER_RAMP_PATTERN.search(line)
-        range_match = self.POWER_RANGE_PATTERN.search(line)
         steady_match = self.POWER_STEADY_PATTERN.search(line)
 
         step = None
@@ -368,24 +361,6 @@ class WorkoutParser:
                 power_low_pct=power_low,
                 power_high_pct=power_high,
                 name=f"Ramp {power_low:.0f}%-{power_high:.0f}%",
-                notes=notes,
-                cadence_low=cadence_low,
-                cadence_high=cadence_high,
-                hr_target_type=hr_target_type,
-                hr_low=hr_low,
-                hr_high=hr_high,
-                hr_is_percentage=hr_is_pct,
-            )
-        elif range_match:
-            power_low = float(range_match.group(1))
-            power_high = float(range_match.group(2))
-            step = WorkoutStep(
-                step_type=StepType.RANGE,
-                duration_seconds=duration,
-                target_type=TargetType.POWER,
-                power_low_pct=power_low,
-                power_high_pct=power_high,
-                name=f"{power_low:.0f}-{power_high:.0f}% FTP",
                 notes=notes,
                 cadence_low=cadence_low,
                 cadence_high=cadence_high,
@@ -659,6 +634,7 @@ class FitWorkoutBuilder:
             power_low = int(step.power_low_pct * self.FTP_SCALE)
             power_high = int(step.power_high_pct * self.FTP_SCALE)
 
+            # Use standard custom_target_value fields for all power targets
             msg.custom_target_value_low = power_low
             msg.custom_target_value_high = power_high
 

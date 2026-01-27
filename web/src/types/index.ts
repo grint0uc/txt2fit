@@ -2,7 +2,6 @@
 export enum StepType {
   STEADY = 'STEADY',
   RAMP = 'RAMP',
-  RANGE = 'RANGE',
   WARMUP = 'WARMUP',
   COOLDOWN = 'COOLDOWN',
   RECOVERY = 'RECOVERY',
@@ -16,12 +15,15 @@ export enum TargetType {
   CADENCE = 'CADENCE',
 }
 
-// Intensity Levels
+// Intensity Levels (must match FIT protocol values)
 export enum Intensity {
-  WARMUP = 0,
-  ACTIVE = 1,
-  REST = 2,
-  INTERVAL = 3,
+  ACTIVE = 0,
+  REST = 1,
+  WARMUP = 2,
+  COOLDOWN = 3,
+  RECOVERY = 4,
+  INTERVAL = 5,
+  OTHER = 6,
 }
 
 // Workout Step

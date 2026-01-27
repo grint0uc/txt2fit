@@ -4,7 +4,7 @@
  */
 
 // FIT Constants
-export const FIT_HEADER_SIZE = 14;
+export const FIT_HEADER_SIZE = 12;
 export const FIT_CRC_SIZE = 2;
 export const FIT_DATA_TYPE_SIZE = 1;
 export const FIT_FIELD_HEADER_SIZE = 1;
@@ -19,22 +19,22 @@ export const FTP_SCALE = 1; // 0-1000 scale for % FTP
 export const HR_ABSOLUTE_OFFSET = 100; // Offset for absolute HR values
 export const DURATION_MS_SCALE = 1000; // Duration in milliseconds
 
-// Data Type IDs
+// Data Type IDs (FIT Protocol Base Types)
 export enum DataTypeId {
-  ENUM = 0,
-  SINT8 = 1,
-  UINT8 = 2,
-  SINT16 = 3,
-  UINT16 = 4,
-  SINT32 = 5,
-  UINT32 = 6,
-  STRING = 7,
-  FLOAT32 = 8,
-  FLOAT64 = 9,
-  UINT8Z = 10,
-  UINT16Z = 11,
-  UINT32Z = 12,
-  BYTE = 13,
+  ENUM = 0x00,
+  SINT8 = 0x01,
+  UINT8 = 0x02,
+  SINT16 = 0x83,
+  UINT16 = 0x84,
+  SINT32 = 0x85,
+  UINT32 = 0x86,
+  STRING = 0x07,
+  FLOAT32 = 0x88,
+  FLOAT64 = 0x89,
+  UINT8Z = 0x0A,
+  UINT16Z = 0x8B,
+  UINT32Z = 0x8C,
+  BYTE = 0x0D,
 }
 
 // Message Types
@@ -46,7 +46,12 @@ export enum MessageType {
 
 // File Types
 export enum FileType {
-  WORKOUT = 4,
+  DEVICE = 1,
+  SETTINGS = 2,
+  SPORT = 3,
+  ACTIVITY = 4,
+  WORKOUT = 5,
+  COURSE = 6,
 }
 
 // Sports
@@ -56,10 +61,13 @@ export enum Sport {
 
 // Intensities
 export enum Intensity {
-  WARM_UP = 0,
-  ACTIVE = 1,
-  REST = 2,
-  INTERVAL = 3,
+  ACTIVE = 0,
+  REST = 1,
+  WARMUP = 2,
+  COOLDOWN = 3,
+  RECOVERY = 4,
+  INTERVAL = 5,
+  OTHER = 6,
 }
 
 // Workout Step Duration Types
@@ -80,12 +88,13 @@ export enum WorkoutStepDuration {
 
 // Workout Step Target Types
 export enum WorkoutStepTarget {
-  POWER = 1,
-  HEART_RATE = 2,
+  SPEED = 0,
+  HEART_RATE = 1,
+  OPEN = 2,
   CADENCE = 3,
-  GRADE = 4,
-  RESISTANCE = 5,
-  OPEN = 6,
+  POWER = 4,
+  GRADE = 5,
+  RESISTANCE = 6,
 }
 
 // Manufacturers
@@ -135,6 +144,8 @@ export interface WorkoutStepMessage {
   targetValue?: number;
   customTargetValueLow?: number;
   customTargetValueHigh?: number;
+  customTargetPowerLow?: number;
+  customTargetPowerHigh?: number;
   intensity: Intensity;
   notes?: string;
   customTargetCadenceLow?: number;
@@ -173,36 +184,45 @@ export function encodeSint16(value: number, littleEndian = true): number[] {
   return littleEndian ? bytes : bytes.reverse();
 }
 
-export function encodeString(str: string): number[] {
-  return Array.from(new TextEncoder().encode(str));
+export function encodeString(str: string, fixedSize?: number): number[] {
+  const bytes = Array.from(new TextEncoder().encode(str));
+  bytes.push(0); // Null terminator required by FIT protocol
+
+  // Pad to fixed size if specified
+  if (fixedSize !== undefined) {
+    while (bytes.length < fixedSize) {
+      bytes.push(0);
+    }
+    // Truncate if too long
+    if (bytes.length > fixedSize) {
+      bytes.length = fixedSize;
+      bytes[fixedSize - 1] = 0; // Ensure null terminator at end
+    }
+  }
+
+  return bytes;
 }
 
-// CRC16 calculation for FIT protocol
+// CRC16 calculation for FIT protocol (taken from FIT SDK)
+const CRC_TABLE = [
+  0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401,
+  0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400
+];
+
 export function calculateCrc16(data: number[]): number {
-  const CRC_TABLE = generateCrcTable();
   let crc = 0;
 
   for (const byte of data) {
-    crc = ((crc << 8) ^ CRC_TABLE[((crc >> 8) ^ byte) & 0xFF]) & 0xFFFF;
+    // Compute checksum of lower four bits of byte
+    let tmp = CRC_TABLE[crc & 0xF];
+    crc = (crc >> 4) & 0x0FFF;
+    crc = crc ^ tmp ^ CRC_TABLE[byte & 0xF];
+
+    // Now compute checksum of upper four bits of byte
+    tmp = CRC_TABLE[crc & 0xF];
+    crc = (crc >> 4) & 0x0FFF;
+    crc = crc ^ tmp ^ CRC_TABLE[(byte >> 4) & 0xF];
   }
 
   return crc;
-}
-
-function generateCrcTable(): number[] {
-  const table: number[] = [];
-
-  for (let i = 0; i < 256; i++) {
-    let crc = 0;
-    let code = i;
-
-    for (let j = 0; j < 8; j++) {
-      code = code & 0x8000 ? code << 1 ^ 0xCC01 : code << 1;
-      crc = code & 0x1 ? crc << 1 ^ 0xCC01 : crc << 1;
-    }
-
-    table.push(crc & 0xFFFF);
-  }
-
-  return table;
 }

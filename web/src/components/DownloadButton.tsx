@@ -26,12 +26,20 @@ export function DownloadButton() {
       // Generate FIT file
       const fitData = generateFitFile(currentWorkout);
 
+      // Debug: Log first 100 bytes
+      const debugHex = Array.from(fitData.slice(0, 100))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+      console.log(`Generated ${fitData.length} bytes`);
+      console.log(`First 100 bytes: ${debugHex}`);
+
       // Create blob and download
       const blob = new Blob([fitData as BlobPart], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${(currentWorkout.name || 'workout').replace(/\s+/g, '_')}.fit`;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      link.download = `${(currentWorkout.name || 'workout').replace(/\s+/g, '_')}_${timestamp}.fit`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
