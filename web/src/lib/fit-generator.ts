@@ -150,11 +150,9 @@ export class FitGenerator {
       message.customTargetValueHigh = powerHigh;
     }
 
-    // Handle cadence targets
-    if (step.cadence_low !== undefined && step.cadence_high !== undefined) {
-      message.customTargetCadenceLow = step.cadence_low;
-      message.customTargetCadenceHigh = step.cadence_high;
-    }
+    // NOTE: Cadence targets are NOT written to FIT fields
+    // Cadence should only be included in the notes field
+    // This is because Hammerhead devices reject files with cadence + notes fields
 
     // Build fields array with correct FIT protocol field numbers
     const fields: Field[] = [];
