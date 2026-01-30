@@ -23,8 +23,6 @@ interface ParsedLine {
   power_high_pct?: number;
   heart_rate_low?: number;
   heart_rate_high?: number;
-  cadence_low?: number;
-  cadence_high?: number;
   name?: string;
   notes?: string;
   intensity?: Intensity;
@@ -120,7 +118,7 @@ export class WorkoutParser {
       }
     }
 
-    // Parse general format: "duration power [cadence] [@90rpm] [notes]"
+    // Parse general format: "duration power [notes]"
     const parts = line.split(/\s+/);
     if (parts.length < 1) return null;
 
@@ -147,19 +145,6 @@ export class WorkoutParser {
         parsed.power_high_pct = powerResult.high;
         parsed.intensity = this.detectIntensity(powerResult.low, powerResult.high);
         idx += powerResult.consumed;
-      }
-    }
-
-    // Parse cadence target
-    for (let i = idx; i < parts.length; i++) {
-      if (parts[i].startsWith('@')) {
-        const cadenceResult = this.parseCadence(parts[i]);
-        if (cadenceResult) {
-          parsed.cadence_low = cadenceResult.low;
-          parsed.cadence_high = cadenceResult.high;
-        }
-        idx = i + 1;
-        break;
       }
     }
 
@@ -246,16 +231,6 @@ export class WorkoutParser {
     return null;
   }
 
-  private parseCadence(str: string): { low: number; high: number } | null {
-    const match = str.match(/@(\d+)(?:-(\d+))?rpm?/i);
-    if (!match) return null;
-
-    const low = parseInt(match[1], 10);
-    const high = match[2] ? parseInt(match[2], 10) : low;
-
-    return { low, high };
-  }
-
   private detectIntensity(powerLow: number, powerHigh: number): Intensity {
     const avg = (powerLow + powerHigh) / 2;
 
@@ -277,8 +252,6 @@ export class WorkoutParser {
       target_type: TargetType.POWER,
       power_low_pct: parsed.power_low_pct,
       power_high_pct: parsed.power_high_pct,
-      cadence_low: parsed.cadence_low,
-      cadence_high: parsed.cadence_high,
       intensity: parsed.intensity || Intensity.ACTIVE,
       notes: parsed.notes,
     };

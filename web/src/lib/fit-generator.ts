@@ -150,10 +150,6 @@ export class FitGenerator {
       message.customTargetValueHigh = powerHigh;
     }
 
-    // NOTE: Cadence targets are NOT written to FIT fields
-    // Cadence should only be included in the notes field
-    // This is because Hammerhead devices reject files with cadence + notes fields
-
     // Build fields array with correct FIT protocol field numbers
     const fields: Field[] = [];
 
@@ -199,11 +195,9 @@ export class FitGenerator {
   }
 
   private mapTargetType(targetType: TargetType): WorkoutStepTarget {
-    // Import TargetType enum from types
     const targetMap: { [key: string]: WorkoutStepTarget } = {
       POWER: WorkoutStepTarget.POWER,
       HEART_RATE: WorkoutStepTarget.HEART_RATE,
-      CADENCE: WorkoutStepTarget.CADENCE,
     };
 
     return targetMap[targetType] || WorkoutStepTarget.POWER;

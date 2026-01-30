@@ -58,7 +58,7 @@ See [Python CLI Documentation](#python-cli-reference) below for full details.
 ### Basic Structure
 
 ```
-<duration> <power> [cadence] ["notes"] [repeats]
+<duration> <power> ["notes"] [repeats]
 ```
 
 ### Duration
@@ -69,7 +69,6 @@ See [Python CLI Documentation](#python-cli-reference) below for full details.
 ### Power Targets
 - `90% FTP` - Steady power
 - `85-95% FTP` - Progressive ramp (increases from 85% to 95%)
-- `@90rpm` - Optional cadence target
 
 ### Special Keywords
 - `warmup 10min` - Auto 40→75% FTP ramp
@@ -130,7 +129,6 @@ WattScript/
 │
 ├── examples/               # Example workout files
 │   ├── sweetspot_3x10.txt
-│   ├── cadence_pyramid.txt
 │   └── *.fit               # Pre-generated FIT files
 │
 ├── docs/                   # Documentation
@@ -197,7 +195,7 @@ See [`web/README.md`](./web/README.md) for details.
 - TypeScript port of Python FIT encoder
 - Binary protocol implementation
 - CRC16 validation
-- Supports power, HR, cadence targets
+- Supports power and HR targets
 
 ---
 
@@ -287,7 +285,7 @@ FIT Header (14 bytes)
 ├── WorkoutMessage (name, sport, step count)
 └── WorkoutStepMessage[] (intervals)
     ├── duration_type, duration_value
-    ├── target_type (POWER/HEART_RATE/CADENCE)
+    ├── target_type (POWER/HEART_RATE)
     ├── custom_target_value_low/high
     ├── intensity
     └── notes

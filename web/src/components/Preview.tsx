@@ -245,12 +245,6 @@ function StepRow({ step, index, ftp }: StepRowProps) {
           <div className="text-carbon-400 text-xs mt-1">
             Power: {formatPower(step.power_low_pct, step.power_high_pct)}
           </div>
-          {(step.cadence_low || step.cadence_high) && (
-            <div className="text-carbon-400 text-xs">
-              Cadence: {step.cadence_low}
-              {step.cadence_high && step.cadence_low !== step.cadence_high ? `–${step.cadence_high}` : ''} RPM
-            </div>
-          )}
           {step.notes && (
             <div className="text-plasma-pink-light text-xs italic mt-1">
               "{step.notes}"

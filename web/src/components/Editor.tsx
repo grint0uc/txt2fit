@@ -36,7 +36,6 @@ export function Editor() {
           <li>• <span className="text-plasma-pink">10min</span> - Duration (s, min, h)</li>
           <li>• <span className="text-plasma-pink">90% FTP</span> - Power target (required)</li>
           <li>• <span className="text-plasma-pink">85-95% FTP</span> - Power ramp (progressive increase)</li>
-          <li>• <span className="text-plasma-pink">@90rpm</span> - Cadence target (optional)</li>
           <li>• <span className="text-plasma-pink">"note"</span> - Step instructions</li>
           <li>• <span className="text-plasma-pink">3x 5min</span> - Repeat 3 times</li>
           <li>• <span className="text-plasma-pink">warmup, cooldown, recovery</span> - Auto power blocks</li>

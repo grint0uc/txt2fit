@@ -8,7 +8,6 @@ Designed for Hammerhead Karoo and compatible with most cycling computers.
 
 Features:
 - Power targets (% FTP) with ERG mode support
-- Cadence targets (secondary target)
 - Heart rate targets (absolute or % max HR)
 - Open/free ride intervals
 - Ramps and power ranges
@@ -62,7 +61,6 @@ class TargetType(Enum):
     """Type of target metric."""
     POWER = auto()       # Power in % FTP
     HEART_RATE = auto()  # Heart rate (absolute or % max)
-    CADENCE = auto()     # Cadence in RPM
     OPEN = auto()        # No target
 
 
@@ -83,10 +81,6 @@ class WorkoutStep:
     hr_high: float = 0.0
     hr_is_percentage: bool = False  # True if % of max HR
 
-    # Cadence target (secondary)
-    cadence_low: Optional[int] = None
-    cadence_high: Optional[int] = None
-
     # Metadata
     name: str = ""
     notes: str = ""                 # Instructions shown on device
@@ -100,9 +94,6 @@ class WorkoutStep:
         # For steady state, high = low if not specified
         if self.step_type == StepType.STEADY and self.power_high_pct == 0.0:
             self.power_high_pct = self.power_low_pct
-        # For cadence, set high = low if only one value
-        if self.cadence_low is not None and self.cadence_high is None:
-            self.cadence_high = self.cadence_low
 
 
 @dataclass
@@ -147,7 +138,6 @@ class WorkoutParser:
     Supported formats:
         Duration: Xs, Xmin, Xm, Xh (seconds, minutes, hours)
         Power: X% FTP, X%-Y% FTP, X-Y% FTP (steady, ramp, or range)
-        Cadence: @Xrpm, @X-Yrpm (secondary target)
         Heart Rate: X bpm, X-Y bpm, X% HR, X-Y% HR
         Notes: "text in quotes"
         Special: warmup, cooldown, recovery, open, free
@@ -168,11 +158,6 @@ class WorkoutParser:
 
     POWER_RAMP_PATTERN = re.compile(
         r'(\d+(?:\.\d+)?)\s*%?\s*[-–—]+\s*(\d+(?:\.\d+)?)\s*%\s*(?:of\s+)?ftp',
-        re.IGNORECASE
-    )
-
-    CADENCE_PATTERN = re.compile(
-        r'@\s*(\d+)(?:\s*[-–—]+\s*(\d+))?\s*rpm',
         re.IGNORECASE
     )
 
@@ -320,13 +305,6 @@ class WorkoutParser:
         if duration is None:
             raise WorkoutParseError(f"No duration found in: {original_line}")
 
-        # Parse cadence target (secondary)
-        cadence_low, cadence_high = None, None
-        cadence_match = self.CADENCE_PATTERN.search(line)
-        if cadence_match:
-            cadence_low = int(cadence_match.group(1))
-            cadence_high = int(cadence_match.group(2)) if cadence_match.group(2) else cadence_low
-
         # Parse heart rate target
         hr_low, hr_high, hr_is_pct = 0.0, 0.0, False
         hr_target_type = None
@@ -362,8 +340,6 @@ class WorkoutParser:
                 power_high_pct=power_high,
                 name=f"Ramp {power_low:.0f}%-{power_high:.0f}%",
                 notes=notes,
-                cadence_low=cadence_low,
-                cadence_high=cadence_high,
                 hr_target_type=hr_target_type,
                 hr_low=hr_low,
                 hr_high=hr_high,
@@ -379,8 +355,6 @@ class WorkoutParser:
                 power_high_pct=power,
                 name=f"{power:.0f}% FTP",
                 notes=notes,
-                cadence_low=cadence_low,
-                cadence_high=cadence_high,
                 hr_target_type=hr_target_type,
                 hr_low=hr_low,
                 hr_high=hr_high,
@@ -402,8 +376,6 @@ class WorkoutParser:
                 hr_is_percentage=hr_is_pct,
                 name=name,
                 notes=notes,
-                cadence_low=cadence_low,
-                cadence_high=cadence_high,
             )
         else:
             raise WorkoutParseError(f"No power or HR target found in: {original_line}")
@@ -498,10 +470,6 @@ class FitWorkoutBuilder:
     - Heart rate targets (absolute or % max)
     - Proper message ordering and structure
     - Repeat steps and nested structures
-
-    Note: Cadence as secondary target requires secondary_target_* fields
-    which are not yet supported in fit-tool library. Cadence values are
-    stored in step notes for display purposes.
     """
 
     # FIT uses 0-100 scale for percentage of FTP
@@ -593,19 +561,9 @@ class FitWorkoutBuilder:
         # Set step name
         msg.workout_step_name = step.name or f"Step {msg.message_index + 1}"
 
-        # Build notes - include cadence target in notes since secondary_target
-        # fields are not supported in fit-tool library
-        notes_parts = []
+        # Set notes
         if step.notes:
-            notes_parts.append(step.notes)
-        if step.cadence_low is not None:
-            if step.cadence_low == step.cadence_high:
-                notes_parts.append(f"Cadence: {step.cadence_low} rpm")
-            else:
-                notes_parts.append(f"Cadence: {step.cadence_low}-{step.cadence_high} rpm")
-
-        if notes_parts:
-            msg.notes = " | ".join(notes_parts)
+            msg.notes = step.notes
 
         # Duration - FIT uses milliseconds!
         msg.duration_type = WorkoutStepDuration.TIME
@@ -753,17 +711,15 @@ def main():
 Examples:
   %(prog)s workout.txt -o sweetspot.fit --name "Sweet Spot 3x10"
   %(prog)s workout.txt --name "VO2 Max" --ftp 280
-  echo "10min 90%% FTP @90rpm" | %(prog)s - -o quick.fit
+  echo "10min 90%% FTP" | %(prog)s - -o quick.fit
 
 Input Format:
   2min 80%% FTP              Steady power at 80%% FTP
   5min 30%% - 70%% FTP       Ramp from 30%% to 70%% FTP
   5min 85-95%% FTP           Power range (target zone)
   3x 2min 100%% FTP          Repeat 3 times
-  5min 90%% FTP @95rpm       With cadence target
-  5min 90%% FTP @90-100rpm   With cadence range
   10min 150-160 bpm          Heart rate target (absolute)
-  10min 75-85%% HR           Heart rate target (% max)
+  10min 75-85%% HR           Heart rate target (%% max)
   5min open                  Free ride (no target)
   5min 100%% FTP "Hold it!"  With notes
   warmup 10min               Auto warmup
@@ -888,20 +844,12 @@ def _print_step_details(step: WorkoutStep, prefix: str, ftp: Optional[int], max_
             high_w = int(step.power_high_pct / 100 * ftp)
             target += f" ({low_w}-{high_w}W)"
 
-    # Add cadence if present
-    cadence_str = ""
-    if step.cadence_low is not None:
-        if step.cadence_low == step.cadence_high:
-            cadence_str = f" @{step.cadence_low}rpm"
-        else:
-            cadence_str = f" @{step.cadence_low}-{step.cadence_high}rpm"
-
     # Add notes if present
     notes_str = ""
     if step.notes:
         notes_str = f' "{step.notes}"'
 
-    print(f"{prefix}. {dur} {target}{cadence_str}{notes_str}")
+    print(f"{prefix}. {dur} {target}{notes_str}")
 
 
 if __name__ == "__main__":

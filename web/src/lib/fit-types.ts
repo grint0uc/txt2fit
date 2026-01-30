@@ -148,8 +148,6 @@ export interface WorkoutStepMessage {
   customTargetPowerHigh?: number;
   intensity: Intensity;
   notes?: string;
-  // NOTE: Cadence targets are NOT supported in FIT fields
-  // Cadence should only be included in the notes field
 }
 
 // Binary encoding helpers

@@ -12,7 +12,6 @@ export enum StepType {
 export enum TargetType {
   POWER = 'POWER',
   HEART_RATE = 'HEART_RATE',
-  CADENCE = 'CADENCE',
 }
 
 // Intensity Levels (must match FIT protocol values)
@@ -35,8 +34,6 @@ export interface WorkoutStep {
   power_high_pct?: number;
   heart_rate_low?: number;
   heart_rate_high?: number;
-  cadence_low?: number;
-  cadence_high?: number;
   name?: string;
   notes?: string;
   intensity?: Intensity;
