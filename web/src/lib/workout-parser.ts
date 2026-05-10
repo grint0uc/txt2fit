@@ -1,4 +1,12 @@
-import { StepType, TargetType, Intensity, type Workout, type WorkoutStep, type ParseResult } from '../types';
+import {
+  StepType,
+  TargetType,
+  Intensity,
+  ZONE_RANGES,
+  type Workout,
+  type WorkoutStep,
+  type ParseResult,
+} from '../types';
 
 const INTENSITY_MAP: { [key: string]: Intensity } = {
   warmup: Intensity.WARMUP,
@@ -19,14 +27,20 @@ const INTENSITY_MAP: { [key: string]: Intensity } = {
 
 interface ParsedLine {
   duration_seconds: number;
+  // % FTP power
   power_low_pct?: number;
   power_high_pct?: number;
+  // Absolute watts
+  power_watts?: number;
+  power_watts_high?: number;
+  // HR
   heart_rate_low?: number;
   heart_rate_high?: number;
   name?: string;
   notes?: string;
   intensity?: Intensity;
   repeat_count?: number;
+  zone?: number;
   is_special_block?: boolean;
   special_block_type?: 'warmup' | 'cooldown' | 'recovery' | 'open';
 }
@@ -62,7 +76,6 @@ export class WorkoutParser {
       }
 
       if (parsed.repeat_count && parsed.repeat_count > 1) {
-        // Create repeat block
         const repeatSteps = this.createRepeatBlock(parsed, i);
         steps.push(...repeatSteps);
       } else {
@@ -107,18 +120,15 @@ export class WorkoutParser {
       line = line.replace(repeatMatch[0], '').trim();
     }
 
-    // Check for special blocks
-    for (const [keyword, type] of Object.entries({
-      warmup: 'warmup',
-      cooldown: 'cooldown',
-      recovery: 'recovery',
-    })) {
+    // Check for special blocks: warmup, cooldown, recovery
+    const specialKeywords = { warmup: 'warmup', cooldown: 'cooldown', recovery: 'recovery' } as const;
+    for (const [keyword, type] of Object.entries(specialKeywords)) {
       if (line.toLowerCase().startsWith(keyword)) {
-        return this.parseSpecialBlock(line, keyword, type as any, notes);
+        return this.parseSpecialBlock(line, keyword, type as 'warmup' | 'cooldown' | 'recovery', notes);
       }
     }
 
-    // Parse general format: "duration power [notes]"
+    // Parse general format: "duration [target] [keywords] [notes]"
     const parts = line.split(/\s+/);
     if (parts.length < 1) return null;
 
@@ -136,19 +146,22 @@ export class WorkoutParser {
       return null;
     }
 
-    // Parse power target
+    // Parse target (power/zone/HR) from remaining parts
     let idx = 1;
-    if (idx < parts.length && parts[idx].includes('%')) {
-      const powerResult = this.parsePower(parts.slice(idx));
-      if (powerResult) {
-        parsed.power_low_pct = powerResult.low;
-        parsed.power_high_pct = powerResult.high;
-        parsed.intensity = this.detectIntensity(powerResult.low, powerResult.high);
-        idx += powerResult.consumed;
+    if (idx < parts.length) {
+      const targetResult = this.parseTarget(parts.slice(idx));
+      if (targetResult) {
+        Object.assign(parsed, targetResult.parsed);
+        idx += targetResult.consumed;
+
+        // Auto-detect intensity from power %
+        if (parsed.power_low_pct !== undefined && parsed.power_high_pct !== undefined) {
+          parsed.intensity = this.detectIntensity(parsed.power_low_pct, parsed.power_high_pct);
+        }
       }
     }
 
-    // Check for intensity keywords
+    // Check for intensity keywords in remaining text
     const remaining = parts.slice(idx).join(' ').toLowerCase();
     for (const [keyword, intensity] of Object.entries(INTENSITY_MAP)) {
       if (remaining.includes(keyword)) {
@@ -160,18 +173,79 @@ export class WorkoutParser {
     return parsed;
   }
 
+  /**
+   * Parse a target from an array of tokens. Supports:
+   *   % FTP:   "90%", "85%-95%", "85% - 95%", "85-95%"
+   *   Watts:   "250w", "250W", "200w-300w"
+   *   Zones:   "Z4", "zone4", "z4"
+   */
+  private parseTarget(
+    parts: string[]
+  ): { parsed: Partial<ParsedLine>; consumed: number } | null {
+    const token = parts[0];
+
+    // --- Zone: Z1–Z7 or zone1–zone7 ---
+    const zoneMatch = token.match(/^z(?:one)?(\d)/i);
+    if (zoneMatch) {
+      const zoneNum = parseInt(zoneMatch[1], 10);
+      if (zoneNum >= 1 && zoneNum <= 7) {
+        const range = ZONE_RANGES[zoneNum];
+        return {
+          parsed: {
+            power_low_pct: range.low,
+            power_high_pct: range.high,
+            zone: zoneNum,
+            intensity: this.detectIntensity(range.low, range.high),
+          },
+          consumed: 1,
+        };
+      }
+    }
+
+    // --- Absolute Watts: "250w", "200w-300w" ---
+    const wattsMatch = token.match(/^(\d+(?:\.\d+)?)w(?:-(\d+(?:\.\d+)?)w)?$/i);
+    if (wattsMatch) {
+      const low = parseFloat(wattsMatch[1]);
+      const high = wattsMatch[2] ? parseFloat(wattsMatch[2]) : low;
+      return {
+        parsed: {
+          power_watts: low,
+          power_watts_high: high,
+        },
+        consumed: 1,
+      };
+    }
+
+    // --- % FTP: "90%", "85-95%", "85% - 95%", "85%-95%" ---
+    if (token.includes('%')) {
+      const powerResult = this.parsePowerPct(parts);
+      if (powerResult) {
+        return {
+          parsed: {
+            power_low_pct: powerResult.low,
+            power_high_pct: powerResult.high,
+          },
+          consumed: powerResult.consumed,
+        };
+      }
+    }
+
+    return null;
+  }
+
   private parseSpecialBlock(
     line: string,
     keyword: string,
     type: 'warmup' | 'cooldown' | 'recovery',
     notes?: string
   ): ParsedLine {
-    const durationStr = line.replace(new RegExp(`^${keyword}\\s+`, 'i'), '').split(/\s+/)[0];
+    const afterKeyword = line.replace(new RegExp(`^${keyword}\\s+`, 'i'), '');
+    const durationStr = afterKeyword.split(/\s+/)[0];
     const duration_seconds = this.parseDuration(durationStr);
 
     const intensityMap = {
       warmup: Intensity.WARMUP,
-      cooldown: Intensity.WARMUP,
+      cooldown: Intensity.COOLDOWN,
       recovery: Intensity.REST,
     };
 
@@ -203,23 +277,31 @@ export class WorkoutParser {
     return value * (unitMap[unit] || 60);
   }
 
-  private parsePower(
+  /**
+   * Parse % FTP power targets.
+   * Handles: "90%", "90% FTP", "85-95%", "85% - 95%", "85%-95%"
+   */
+  private parsePowerPct(
     parts: string[]
   ): { low: number; high: number; consumed: number } | null {
     let powerStr = parts[0];
     let consumed = 1;
 
-    // Look for range: "50% - 80% FTP"
-    if (parts.length > 1 && parts[1] === '-') {
+    // Spaced range: "85% - 95%"
+    if (parts.length >= 3 && parts[1] === '-') {
       powerStr = `${parts[0]}-${parts[2]}`;
       consumed = 3;
     }
 
+    // Normalise: "85%-95%" or "85% - 95%" or "85-95%"
+    // After the join above it becomes "85%-95%" or "85%-95%"
     const rangeMatch = powerStr.match(/^(\d+)%?\s*-\s*(\d+)%/);
     if (rangeMatch) {
-      const low = parseInt(rangeMatch[1], 10);
-      const high = parseInt(rangeMatch[2], 10);
-      return { low, high, consumed };
+      return {
+        low: parseInt(rangeMatch[1], 10),
+        high: parseInt(rangeMatch[2], 10),
+        consumed,
+      };
     }
 
     const singleMatch = powerStr.match(/^(\d+)%/);
@@ -233,11 +315,9 @@ export class WorkoutParser {
 
   private detectIntensity(powerLow: number, powerHigh: number): Intensity {
     const avg = (powerLow + powerHigh) / 2;
-
-    if (avg < 50) return Intensity.REST;
-    if (avg < 75) return Intensity.ACTIVE;
-    if (avg < 90) return Intensity.ACTIVE;
-    if (avg < 110) return Intensity.INTERVAL;
+    if (avg < 56) return Intensity.REST;
+    if (avg < 76) return Intensity.ACTIVE;
+    if (avg < 106) return Intensity.ACTIVE;
     return Intensity.INTERVAL;
   }
 
@@ -246,15 +326,40 @@ export class WorkoutParser {
       return this.buildSpecialBlockStep(parsed);
     }
 
-    return {
-      step_type: parsed.power_low_pct === parsed.power_high_pct ? StepType.STEADY : StepType.RAMP,
+    const hasWatts = parsed.power_watts !== undefined;
+    const hasPct = parsed.power_low_pct !== undefined;
+
+    // Determine step type
+    let step_type = StepType.STEADY;
+    if (hasPct && parsed.power_low_pct !== parsed.power_high_pct) {
+      step_type = StepType.RAMP;
+    } else if (hasWatts && parsed.power_watts !== parsed.power_watts_high) {
+      step_type = StepType.RAMP;
+    }
+
+    const step: WorkoutStep = {
+      step_type,
       duration_seconds: parsed.duration_seconds,
       target_type: TargetType.POWER,
-      power_low_pct: parsed.power_low_pct,
-      power_high_pct: parsed.power_high_pct,
       intensity: parsed.intensity || Intensity.ACTIVE,
       notes: parsed.notes,
     };
+
+    if (hasPct) {
+      step.power_low_pct = parsed.power_low_pct;
+      step.power_high_pct = parsed.power_high_pct;
+    }
+
+    if (hasWatts) {
+      step.power_watts = parsed.power_watts;
+      step.power_watts_high = parsed.power_watts_high;
+    }
+
+    if (parsed.zone !== undefined) {
+      step.zone = parsed.zone;
+    }
+
+    return step;
   }
 
   private buildSpecialBlockStep(parsed: ParsedLine): WorkoutStep {
@@ -268,6 +373,7 @@ export class WorkoutParser {
         power_low_pct: 40,
         power_high_pct: 75,
         intensity: Intensity.WARMUP,
+        notes: parsed.notes,
       };
     }
 
@@ -279,6 +385,7 @@ export class WorkoutParser {
         power_low_pct: 65,
         power_high_pct: 40,
         intensity: Intensity.WARMUP,
+        notes: parsed.notes,
       };
     }
 
@@ -290,6 +397,7 @@ export class WorkoutParser {
       power_low_pct: 50,
       power_high_pct: 50,
       intensity: Intensity.REST,
+      notes: parsed.notes,
     };
   }
 

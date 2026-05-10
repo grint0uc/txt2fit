@@ -13,278 +13,216 @@ import {
   encodeUint32,
   encodeString,
   calculateCrc16,
-  type FileIdMessage,
-  type WorkoutMessage,
-  type WorkoutStepMessage,
 } from './fit-types';
 import type { Workout, WorkoutStep, TargetType } from '../types';
 
 const LITTLE_ENDIAN = true;
-const LOCAL_MESSAGE_TYPE = 0;
+const STRING_SIZE = 50; // Fixed size for all string fields – must match across definition + data
+
+// Local message type slots
+const LOCAL_FILE_ID   = 0;
+const LOCAL_WORKOUT   = 1;
+const LOCAL_WKT_STEP  = 2;
 
 export class FitGenerator {
   private data: number[] = [];
-  private definitions: Map<number, MessageDefinition> = new Map();
   private dataSizeIndex: number = 0;
+  private stepIndex: number = 0;
 
   generate(workout: Workout): Uint8Array {
     this.data = [];
-    this.definitions = new Map();
+    this.stepIndex = 0;
 
-    console.log(`[FIT Gen] Generating workout: "${workout.name}" with ${workout.steps.length} steps`);
-    workout.steps.forEach((step, i) => {
-      console.log(`[FIT Gen] Step ${i}: ${step.name || 'unnamed'}, ${step.duration_seconds}s, ${step.power_low_pct}-${step.power_high_pct}% FTP`);
-    });
+    // Count total steps (including repeat markers)
+    const totalMessages = this.countMessages(workout);
 
-    // Write FIT header
-    this.writeHeader(workout.steps.length + 2);
-    console.log(`[FIT Gen] After header: ${this.data.length} bytes`);
+    this.writeHeader();
+    this.writeFileIdDefinition();
+    this.writeFileIdData();
+    this.writeWorkoutDefinition();
+    this.writeWorkoutData(workout, totalMessages);
+    this.writeWorkoutStepDefinition();
 
-    // Write FileIdMessage
-    this.writeFileIdMessage();
-    console.log(`[FIT Gen] After FileID: ${this.data.length} bytes`);
-
-    // Write WorkoutMessage
-    this.writeWorkoutMessage(workout);
-    console.log(`[FIT Gen] After Workout: ${this.data.length} bytes`);
-
-    // Write WorkoutStepMessages
-    for (let messageCount = 0; messageCount < workout.steps.length; messageCount++) {
-      this.writeWorkoutStepMessage(workout.steps[messageCount], messageCount);
-      console.log(`[FIT Gen] After Step ${messageCount}: ${this.data.length} bytes`);
+    // Write steps
+    for (const step of workout.steps) {
+      this.writeWorkoutStepData(step, this.stepIndex);
+      this.stepIndex++;
     }
 
-    // Update data size in header before CRC
+    // Patch data size
     const dataSize = this.data.length - FIT_HEADER_SIZE;
     const dataSizeBytes = encodeUint32(dataSize, LITTLE_ENDIAN);
-    this.data[this.dataSizeIndex] = dataSizeBytes[0];
+    this.data[this.dataSizeIndex]     = dataSizeBytes[0];
     this.data[this.dataSizeIndex + 1] = dataSizeBytes[1];
     this.data[this.dataSizeIndex + 2] = dataSizeBytes[2];
     this.data[this.dataSizeIndex + 3] = dataSizeBytes[3];
 
-    // Write file CRC over complete file (12-byte header, no header CRC)
+    // File CRC
     const fileCrc = calculateCrc16(this.data);
     this.data.push(...encodeUint16(fileCrc, LITTLE_ENDIAN));
 
-    console.log(`[FIT Gen] Final size: ${this.data.length} bytes (data: ${dataSize}, CRC: 2)`);
     return new Uint8Array(this.data);
   }
 
-  private writeHeader(_messageCount: number): void {
-    // Header size: 1 byte (12 for header without CRC - matches Python)
-    this.data.push(12);
+  // ─── Header ───────────────────────────────────────────────────────────────
 
-    // Protocol version: 1 byte (match Python fit-tool)
-    this.data.push(0x23);
-
-    // Profile version: 2 bytes (match Python fit-tool)
-    this.data.push(...encodeUint16(2160, LITTLE_ENDIAN));
-
-    // Data size: 4 bytes - PLACEHOLDER, will be updated later
-    const dataSizeIndex = this.data.length;
-    this.data.push(0, 0, 0, 0);
-
-    // Signature: 4 bytes ".FIT"
-    this.data.push(0x2e, 0x46, 0x49, 0x54);
-
-    // Store index for later update (no header CRC for 12-byte header)
-    this.dataSizeIndex = dataSizeIndex;
+  private writeHeader(): void {
+    this.data.push(12);                                    // Header size (12, no CRC)
+    this.data.push(0x23);                                  // Protocol version
+    this.data.push(...encodeUint16(2160, LITTLE_ENDIAN));  // Profile version
+    this.dataSizeIndex = this.data.length;
+    this.data.push(0, 0, 0, 0);                            // Data size placeholder
+    this.data.push(0x2e, 0x46, 0x49, 0x54);               // ".FIT"
   }
 
-  private writeFileIdMessage(): void {
-    const message: FileIdMessage = {
-      type: FileType.WORKOUT,
-      manufacturer: Manufacturer.GARMIN,
-      product: 0xFFFF,
-      serialNumber: Math.floor(Math.random() * 0xFFFFFFFF),
-      timeCreated: Math.floor(Date.now() / 1000),
-    };
+  // ─── FILE_ID ──────────────────────────────────────────────────────────────
 
-    this.writeMessage(MessageType.FILE_ID, [
-      { field: 0, value: encodeUint8(message.type), type: DataTypeId.ENUM },
-      { field: 1, value: encodeUint16(message.manufacturer || 0, LITTLE_ENDIAN), type: DataTypeId.UINT16 },
-      { field: 2, value: encodeUint16(message.product || 0, LITTLE_ENDIAN), type: DataTypeId.UINT16 },
-      { field: 3, value: encodeUint32(message.serialNumber || 0, LITTLE_ENDIAN), type: DataTypeId.UINT32Z },
-      { field: 4, value: encodeUint32(message.timeCreated || 0, LITTLE_ENDIAN), type: DataTypeId.UINT32 },
-    ]);
+  private writeFileIdDefinition(): void {
+    // Definition header: normal definition, local type = LOCAL_FILE_ID
+    this.data.push(0x40 | LOCAL_FILE_ID);
+    this.data.push(0);                  // Reserved
+    this.data.push(0);                  // Little-endian
+    this.data.push(...encodeUint16(MessageType.FILE_ID, LITTLE_ENDIAN));
+    this.data.push(5);                  // Field count
+    // Field defs: [number, size, type]
+    this.data.push(0, 1, DataTypeId.ENUM);     // type
+    this.data.push(1, 2, DataTypeId.UINT16);   // manufacturer
+    this.data.push(2, 2, DataTypeId.UINT16);   // product
+    this.data.push(3, 4, DataTypeId.UINT32Z);  // serial_number
+    this.data.push(4, 4, DataTypeId.UINT32);   // time_created
   }
 
-  private writeWorkoutMessage(workout: Workout): void {
-    const STRING_FIELD_SIZE = 50; // Fixed size for string fields to match Python
-    const workoutName = workout.name || 'Workout';
-    const message: WorkoutMessage = {
-      workoutName,
-      numValidSteps: workout.steps.length,
-      sport: Sport.CYCLING,
-    };
-
-    this.writeMessage(MessageType.WORKOUT, [
-      { field: 4, value: encodeUint8(message.sport), type: DataTypeId.ENUM },
-      { field: 6, value: encodeUint16(message.numValidSteps, LITTLE_ENDIAN), type: DataTypeId.UINT16 },
-      { field: 8, value: encodeString(workoutName, STRING_FIELD_SIZE), type: DataTypeId.STRING },
-    ]);
+  private writeFileIdData(): void {
+    this.data.push(LOCAL_FILE_ID);
+    this.data.push(...encodeUint8(FileType.WORKOUT));
+    this.data.push(...encodeUint16(Manufacturer.GARMIN, LITTLE_ENDIAN));
+    this.data.push(...encodeUint16(0xFFFF, LITTLE_ENDIAN));
+    this.data.push(...encodeUint32(Math.floor(Math.random() * 0xFFFFFFFF), LITTLE_ENDIAN));
+    this.data.push(...encodeUint32(Math.floor(Date.now() / 1000), LITTLE_ENDIAN));
   }
 
-  private writeWorkoutStepMessage(step: WorkoutStep, messageIndex: number): void {
-    const STRING_FIELD_SIZE = 50; // Fixed size for string fields to match Python
+  // ─── WORKOUT ──────────────────────────────────────────────────────────────
 
-    const message: WorkoutStepMessage = {
-      messageIndex,
-      wktStepName: step.name || `Step ${messageIndex + 1}`,
-      durationType: WorkoutStepDuration.TIME,
-      durationValue: Math.round(step.duration_seconds * 1000), // Convert to milliseconds
-      targetType: this.mapTargetType(step.target_type),
-      targetValue: 0, // Set to 0 for custom targets (as per Garmin SDK)
-      // Always use ACTIVE intensity for now (until UI properly sets intensity)
-      intensity: Intensity.ACTIVE,
-      notes: step.notes,
-    };
-
-    // Handle power targets
-    if (step.power_low_pct !== undefined && step.power_high_pct !== undefined) {
-      const powerLow = Math.round(step.power_low_pct);
-      const powerHigh = Math.round(step.power_high_pct);
-
-      // Use standard custom_target_value fields for all power targets
-      message.customTargetValueLow = powerLow;
-      message.customTargetValueHigh = powerHigh;
-    }
-
-    // Build fields array with correct FIT protocol field numbers
-    const fields: Field[] = [];
-
-    // Field 254: message_index (UINT16)
-    fields.push({ field: 254, value: encodeUint16(messageIndex, LITTLE_ENDIAN), type: DataTypeId.UINT16 });
-
-    // Field 0: workout_step_name (STRING, 50 bytes fixed)
-    if (message.wktStepName) {
-      fields.push({ field: 0, value: encodeString(message.wktStepName, STRING_FIELD_SIZE), type: DataTypeId.STRING });
-    }
-
-    // Field 1: duration_type (ENUM)
-    fields.push({ field: 1, value: encodeUint8(message.durationType), type: DataTypeId.ENUM });
-
-    // Field 2: duration_value (UINT32)
-    fields.push({ field: 2, value: encodeUint32(message.durationValue, LITTLE_ENDIAN), type: DataTypeId.UINT32 });
-
-    // Field 3: target_type (ENUM)
-    fields.push({ field: 3, value: encodeUint8(message.targetType), type: DataTypeId.ENUM });
-
-    // Field 4: target_value (UINT32)
-    fields.push({ field: 4, value: encodeUint32(message.targetValue || 0, LITTLE_ENDIAN), type: DataTypeId.UINT32 });
-
-    // Field 5: custom_target_value_low (UINT32)
-    if (message.customTargetValueLow !== undefined) {
-      fields.push({ field: 5, value: encodeUint32(message.customTargetValueLow, LITTLE_ENDIAN), type: DataTypeId.UINT32 });
-    }
-
-    // Field 6: custom_target_value_high (UINT32)
-    if (message.customTargetValueHigh !== undefined) {
-      fields.push({ field: 6, value: encodeUint32(message.customTargetValueHigh, LITTLE_ENDIAN), type: DataTypeId.UINT32 });
-    }
-
-    // Field 7: intensity (ENUM)
-    fields.push({ field: 7, value: encodeUint8(message.intensity), type: DataTypeId.ENUM });
-
-    // Field 8: notes (STRING, 50 bytes fixed)
-    if (message.notes) {
-      fields.push({ field: 8, value: encodeString(message.notes, STRING_FIELD_SIZE), type: DataTypeId.STRING });
-    }
-
-    this.writeMessage(MessageType.WORKOUT_STEP, fields);
-  }
-
-  private mapTargetType(targetType: TargetType): WorkoutStepTarget {
-    const targetMap: { [key: string]: WorkoutStepTarget } = {
-      POWER: WorkoutStepTarget.POWER,
-      HEART_RATE: WorkoutStepTarget.HEART_RATE,
-    };
-
-    return targetMap[targetType] || WorkoutStepTarget.POWER;
-  }
-
-  private writeMessage(messageType: MessageType, fields: Field[]): void {
-    // Write message definition (if not already defined)
-    if (!this.definitions.has(messageType)) {
-      this.writeMessageDefinition(messageType, fields);
-    }
-
-    // Write message data
-    this.writeMessageData(messageType, fields);
-  }
-
-  private writeMessageDefinition(messageType: MessageType, fields: Field[]): void {
-    // Normal header (not compressed)
-    const header = 0x40 | LOCAL_MESSAGE_TYPE; // bit 6 set for definition message
-    this.data.push(header);
-
-    // Reserved
+  private writeWorkoutDefinition(): void {
+    this.data.push(0x40 | LOCAL_WORKOUT);
     this.data.push(0);
+    this.data.push(0);
+    this.data.push(...encodeUint16(MessageType.WORKOUT, LITTLE_ENDIAN));
+    this.data.push(3);
+    this.data.push(4,  1,           DataTypeId.ENUM);    // sport
+    this.data.push(6,  2,           DataTypeId.UINT16);  // num_valid_steps
+    this.data.push(8,  STRING_SIZE, DataTypeId.STRING);  // workout_name
+  }
 
-    // Architecture (0 = little-endian)
-    this.data.push(LITTLE_ENDIAN ? 0 : 1);
+  private writeWorkoutData(workout: Workout, numValidSteps: number): void {
+    this.data.push(LOCAL_WORKOUT);
+    this.data.push(...encodeUint8(Sport.CYCLING));
+    this.data.push(...encodeUint16(numValidSteps, LITTLE_ENDIAN));
+    this.data.push(...encodeString(workout.name || 'Workout', STRING_SIZE));
+  }
 
-    // Global message number
-    this.data.push(...encodeUint16(messageType, LITTLE_ENDIAN));
+  // ─── WORKOUT_STEP ─────────────────────────────────────────────────────────
+  // IMPORTANT: definition and data MUST have exactly the same fields in the
+  // same order every time. Variable fields corrupt the file. We always write
+  // all fields, padding strings with nulls.
 
-    // Number of fields
-    this.data.push(fields.length);
+  private writeWorkoutStepDefinition(): void {
+    this.data.push(0x40 | LOCAL_WKT_STEP);
+    this.data.push(0);
+    this.data.push(0);
+    this.data.push(...encodeUint16(MessageType.WORKOUT_STEP, LITTLE_ENDIAN));
+    this.data.push(9); // Always 9 fields – must match writeWorkoutStepData
+    // [field_def_number, size_bytes, base_type]
+    this.data.push(254, 2,           DataTypeId.UINT16);  // message_index
+    this.data.push(0,   STRING_SIZE, DataTypeId.STRING);  // wkt_step_name
+    this.data.push(1,   1,           DataTypeId.ENUM);    // duration_type
+    this.data.push(2,   4,           DataTypeId.UINT32);  // duration_value
+    this.data.push(3,   1,           DataTypeId.ENUM);    // target_type
+    this.data.push(4,   4,           DataTypeId.UINT32);  // target_value
+    this.data.push(5,   4,           DataTypeId.UINT32);  // custom_target_value_low
+    this.data.push(6,   4,           DataTypeId.UINT32);  // custom_target_value_high
+    this.data.push(7,   1,           DataTypeId.ENUM);    // intensity
+    // Note: we deliberately exclude field 8 (notes/STRING) because it makes
+    // the definition fixed and simpler. Step notes go in wkt_step_name instead
+    // when present, or we can add it as a second definition slot if needed.
+  }
 
-    // Field definitions
-    for (const field of fields) {
-      this.data.push(field.field); // Field definition number
-      this.data.push(this.getFieldSize(field.type, field.value.length)); // Size in bytes
-      this.data.push(field.type); // Data type
+  private writeWorkoutStepData(step: WorkoutStep, index: number): void {
+    this.data.push(LOCAL_WKT_STEP);
+
+    // 254: message_index
+    this.data.push(...encodeUint16(index, LITTLE_ENDIAN));
+
+    // 0: wkt_step_name (always STRING_SIZE bytes)
+    const stepName = step.notes
+      ? `${step.name || `Step ${index + 1}`}: ${step.notes}`.slice(0, STRING_SIZE - 1)
+      : (step.name || `Step ${index + 1}`);
+    this.data.push(...encodeString(stepName, STRING_SIZE));
+
+    // 1: duration_type
+    this.data.push(...encodeUint8(WorkoutStepDuration.TIME));
+
+    // 2: duration_value (milliseconds)
+    this.data.push(...encodeUint32(Math.round(step.duration_seconds * 1000), LITTLE_ENDIAN));
+
+    // Resolve power values
+    const { targetType, targetValue, customLow, customHigh } = this.resolveTarget(step);
+
+    // 3: target_type
+    this.data.push(...encodeUint8(targetType));
+
+    // 4: target_value
+    this.data.push(...encodeUint32(targetValue, LITTLE_ENDIAN));
+
+    // 5: custom_target_value_low
+    this.data.push(...encodeUint32(customLow, LITTLE_ENDIAN));
+
+    // 6: custom_target_value_high
+    this.data.push(...encodeUint32(customHigh, LITTLE_ENDIAN));
+
+    // 7: intensity
+    this.data.push(...encodeUint8(this.resolveIntensity(step)));
+  }
+
+  private resolveTarget(step: WorkoutStep): {
+    targetType: number;
+    targetValue: number;
+    customLow: number;
+    customHigh: number;
+  } {
+    if (step.target_type === 'OPEN' as TargetType) {
+      return { targetType: WorkoutStepTarget.OPEN, targetValue: 0, customLow: 0, customHigh: 0 };
     }
 
-    // Store definition
-    this.definitions.set(messageType, {
-      messageType,
-      fields,
-    });
-  }
-
-  private writeMessageData(_messageType: MessageType, fields: Field[]): void {
-    // Normal header (not compressed) with local message type
-    const header = LOCAL_MESSAGE_TYPE;
-    this.data.push(header);
-
-    // Write field values
-    for (const field of fields) {
-      this.data.push(...field.value);
+    if (step.target_type === 'HEART_RATE' as TargetType) {
+      const low  = step.heart_rate_low  ? step.heart_rate_low  + 100 : 0;
+      const high = step.heart_rate_high ? step.heart_rate_high + 100 : 0;
+      return { targetType: WorkoutStepTarget.HEART_RATE, targetValue: 0, customLow: low, customHigh: high };
     }
+
+    // POWER – use % FTP (raw percentage, e.g. 85 for 85%)
+    // Clamp to [min, max] so custom_target_value_low ≤ custom_target_value_high as FIT requires.
+    // The parser may store cooldown as (65, 40) for correct web-graph rendering; intensity=COOLDOWN
+    // tells the device the direction is high→low.
+    const a = Math.round(step.power_low_pct  ?? 0);
+    const b = Math.round(step.power_high_pct ?? a);
+    const low  = Math.min(a, b);
+    const high = Math.max(a, b);
+    return { targetType: WorkoutStepTarget.POWER, targetValue: 0, customLow: low, customHigh: high };
   }
 
-  private getFieldSize(dataType: DataTypeId, arrayLength: number): number {
-    const sizeMap: { [key: number]: number } = {
-      [DataTypeId.ENUM]: 1,
-      [DataTypeId.UINT8]: 1,
-      [DataTypeId.UINT8Z]: 1,
-      [DataTypeId.SINT8]: 1,
-      [DataTypeId.UINT16]: 2,
-      [DataTypeId.UINT16Z]: 2,
-      [DataTypeId.SINT16]: 2,
-      [DataTypeId.UINT32]: 4,
-      [DataTypeId.UINT32Z]: 4,
-      [DataTypeId.SINT32]: 4,
-      [DataTypeId.FLOAT32]: 4,
-      [DataTypeId.FLOAT64]: 8,
-      [DataTypeId.STRING]: arrayLength,
-    };
+  private resolveIntensity(step: WorkoutStep): number {
+    if (step.intensity !== undefined) return step.intensity as number;
 
-    return sizeMap[dataType] || arrayLength;
+    const avg = ((step.power_low_pct ?? 0) + (step.power_high_pct ?? step.power_low_pct ?? 0)) / 2;
+    if (avg < 56)  return Intensity.RECOVERY;
+    if (avg < 106) return Intensity.ACTIVE;
+    return Intensity.INTERVAL;
   }
-}
 
-interface Field {
-  field: number;
-  value: number[];
-  type: DataTypeId;
-}
-
-interface MessageDefinition {
-  messageType: MessageType;
-  fields: Field[];
+  private countMessages(workout: Workout): number {
+    return workout.steps.length;
+  }
 }
 
 export function generateFitFile(workout: Workout): Uint8Array {
