@@ -5,6 +5,9 @@ import { useUIStore } from '../store/uiStore';
 import { generateFitFile } from '../lib/fit-generator';
 import { generateZwoFile } from '../lib/zwo-generator';
 
+const ZWO_DEVICES = 'Hammerhead Karoo · Zwift · TrainerRoad · Rouvy · FulGaz';
+const FIT_DEVICES = 'Garmin Edge · Wahoo ELEMNT/BOLT · Bryton · Hammerhead Karoo';
+
 export function DownloadButton() {
   const { currentWorkout, ftp } = useWorkoutStore();
   const { showNotification } = useUIStore();
@@ -29,23 +32,6 @@ export function DownloadButton() {
   const timestamp = () =>
     new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
 
-  const handleFit = async () => {
-    if (!hasFtp) { showNotification('error', 'Please set your FTP value first'); return; }
-    if (!isReady) { showNotification('error', 'Please create a valid workout first'); return; }
-    setLoadingFit(true);
-    try {
-      const data     = generateFitFile({ ...currentWorkout!, ftp: ftp! }) as unknown as BlobPart;
-      const filename = `${(currentWorkout!.name || 'Workout').replace(/\s+/g, '_')}_${timestamp()}.fit`;
-      triggerDownload(data, 'application/octet-stream', filename);
-      showNotification('success', `Downloaded: ${filename}`);
-    } catch (e) {
-      console.error(e);
-      showNotification('error', 'Failed to generate FIT file');
-    } finally {
-      setLoadingFit(false);
-    }
-  };
-
   const handleZwo = async () => {
     if (!hasFtp) { showNotification('error', 'Please set your FTP value first'); return; }
     if (!isReady) { showNotification('error', 'Please create a valid workout first'); return; }
@@ -63,32 +49,69 @@ export function DownloadButton() {
     }
   };
 
+  const handleFit = async () => {
+    if (!hasFtp) { showNotification('error', 'Please set your FTP value first'); return; }
+    if (!isReady) { showNotification('error', 'Please create a valid workout first'); return; }
+    setLoadingFit(true);
+    try {
+      const data     = generateFitFile({ ...currentWorkout!, ftp: ftp! }) as unknown as BlobPart;
+      const filename = `${(currentWorkout!.name || 'Workout').replace(/\s+/g, '_')}_${timestamp()}.fit`;
+      triggerDownload(data, 'application/octet-stream', filename);
+      showNotification('success', `Downloaded: ${filename}`);
+    } catch (e) {
+      console.error(e);
+      showNotification('error', 'Failed to generate FIT file');
+    } finally {
+      setLoadingFit(false);
+    }
+  };
+
   const disabled = !isReady || !hasFtp;
-  const title    = !hasFtp ? 'Set your FTP value to enable download' : undefined;
+  const disabledTitle = 'Set your FTP value to enable download';
 
   return (
-    <div className="flex gap-2">
-      <button
-        id="download-fit-btn"
-        onClick={handleFit}
-        disabled={disabled || loadingFit}
-        title={title ?? 'Download as .FIT (Garmin, Wahoo, Hammerhead)'}
-        className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        <FiDownload size={15} />
-        {loadingFit ? 'Generating…' : 'Download .FIT'}
-      </button>
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-2">
+        {/* ZWO — primary, recommended */}
+        <div className="flex flex-col gap-0.5 flex-1">
+          <button
+            id="download-zwo-btn"
+            onClick={handleZwo}
+            disabled={disabled || loadingZwo}
+            title={disabled ? disabledTitle : `Recommended for Hammerhead · ${ZWO_DEVICES}`}
+            className="btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <FiDownload size={15} />
+            {loadingZwo ? 'Generating…' : 'Download .ZWO'}
+          </button>
+          <p className="text-[10px] text-graphite-400 leading-tight px-0.5">
+            Recommended for Hammerhead · renders ramps
+          </p>
+          <p className="text-[10px] text-graphite-500 leading-tight px-0.5">
+            {ZWO_DEVICES}
+          </p>
+        </div>
 
-      <button
-        id="download-zwo-btn"
-        onClick={handleZwo}
-        disabled={disabled || loadingZwo}
-        title={title ?? 'Download as .ZWO (Zwift, Hammerhead)'}
-        className="btn-secondary disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        <FiDownload size={15} />
-        {loadingZwo ? 'Generating…' : 'Download .ZWO'}
-      </button>
+        {/* FIT — secondary, universal fallback */}
+        <div className="flex flex-col gap-0.5 flex-1">
+          <button
+            id="download-fit-btn"
+            onClick={handleFit}
+            disabled={disabled || loadingFit}
+            title={disabled ? disabledTitle : `Universal binary format · ${FIT_DEVICES}`}
+            className="btn-secondary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <FiDownload size={15} />
+            {loadingFit ? 'Generating…' : 'Download .FIT'}
+          </button>
+          <p className="text-[10px] text-graphite-400 leading-tight px-0.5">
+            Universal fallback · no ramp visuals
+          </p>
+          <p className="text-[10px] text-graphite-500 leading-tight px-0.5">
+            {FIT_DEVICES}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
