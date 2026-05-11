@@ -29,9 +29,12 @@ export class FitGenerator {
   private dataSizeIndex: number = 0;
   private stepIndex: number = 0;
 
+  private ftp: number = 0;
+
   generate(workout: Workout): Uint8Array {
     this.data = [];
     this.stepIndex = 0;
+    this.ftp = workout.ftp ?? 0;
 
     // Count total steps (including repeat markers)
     const totalMessages = this.countMessages(workout);
@@ -200,15 +203,25 @@ export class FitGenerator {
       return { targetType: WorkoutStepTarget.HEART_RATE, targetValue: 0, customLow: low, customHigh: high };
     }
 
-    // POWER – use % FTP (raw percentage, e.g. 85 for 85%)
-    // Clamp to [min, max] so custom_target_value_low ≤ custom_target_value_high as FIT requires.
-    // The parser may store cooldown as (65, 40) for correct web-graph rendering; intensity=COOLDOWN
-    // tells the device the direction is high→low.
-    const a = Math.round(step.power_low_pct  ?? 0);
-    const b = Math.round(step.power_high_pct ?? a);
-    const low  = Math.min(a, b);
-    const high = Math.max(a, b);
-    return { targetType: WorkoutStepTarget.POWER, targetValue: 0, customLow: low, customHigh: high };
+    // POWER – % FTP path
+    if (step.power_low_pct !== undefined) {
+      const a = Math.round(step.power_low_pct);
+      const b = Math.round(step.power_high_pct ?? a);
+      return { targetType: WorkoutStepTarget.POWER, targetValue: 0, customLow: Math.min(a, b), customHigh: Math.max(a, b) };
+    }
+
+    // POWER – absolute watts path: convert to % FTP if FTP is known, else open
+    if (step.power_watts !== undefined) {
+      if (this.ftp > 0) {
+        const low  = Math.round((step.power_watts / this.ftp) * 100);
+        const high = Math.round(((step.power_watts_high ?? step.power_watts) / this.ftp) * 100);
+        return { targetType: WorkoutStepTarget.POWER, targetValue: 0, customLow: Math.min(low, high), customHigh: Math.max(low, high) };
+      }
+      // No FTP set — fall back to open so Hammerhead doesn't reject with 400
+      return { targetType: WorkoutStepTarget.OPEN, targetValue: 0, customLow: 0, customHigh: 0 };
+    }
+
+    return { targetType: WorkoutStepTarget.OPEN, targetValue: 0, customLow: 0, customHigh: 0 };
   }
 
   private resolveIntensity(step: WorkoutStep): number {
