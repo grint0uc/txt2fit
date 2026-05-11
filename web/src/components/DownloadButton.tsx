@@ -4,12 +4,13 @@ import { useWorkoutStore } from '../store/workoutStore';
 import { useUIStore } from '../store/uiStore';
 import { generateFitFile } from '../lib/fit-generator';
 import { generateZwoFile } from '../lib/zwo-generator';
+import { parseWorkout } from '../lib/workout-parser';
 
 const ZWO_DEVICES = 'Hammerhead Karoo · Zwift · TrainerRoad · Rouvy · FulGaz';
 const FIT_DEVICES = 'Garmin Edge · Wahoo ELEMNT/BOLT · Bryton · Hammerhead Karoo';
 
 export function DownloadButton() {
-  const { currentWorkout, ftp } = useWorkoutStore();
+  const { currentWorkout, workoutText, ftp } = useWorkoutStore();
   const { showNotification } = useUIStore();
   const [loadingFit, setLoadingFit] = useState(false);
   const [loadingZwo, setLoadingZwo] = useState(false);
@@ -32,13 +33,20 @@ export function DownloadButton() {
   const timestamp = () =>
     new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
 
+  // Always re-parse from text so cached state (localStorage) never carries stale metadata
+  const freshWorkout = () => {
+    const result = parseWorkout(workoutText);
+    return result.success ? result.workout! : currentWorkout!;
+  };
+
   const handleZwo = async () => {
     if (!hasFtp) { showNotification('error', 'Please set your FTP value first'); return; }
     if (!isReady) { showNotification('error', 'Please create a valid workout first'); return; }
     setLoadingZwo(true);
     try {
-      const xml      = generateZwoFile({ ...currentWorkout!, ftp: ftp! }, ftp!);
-      const filename = `${(currentWorkout!.name || 'Workout').replace(/\s+/g, '_')}_${timestamp()}.zwo`;
+      const workout  = freshWorkout();
+      const xml      = generateZwoFile({ ...workout, ftp: ftp! }, ftp!);
+      const filename = `${(workout.name || 'Workout').replace(/\s+/g, '_')}_${timestamp()}.zwo`;
       triggerDownload(xml, 'application/xml', filename);
       showNotification('success', `Downloaded: ${filename}`);
     } catch (e) {
@@ -54,8 +62,9 @@ export function DownloadButton() {
     if (!isReady) { showNotification('error', 'Please create a valid workout first'); return; }
     setLoadingFit(true);
     try {
-      const data     = generateFitFile({ ...currentWorkout!, ftp: ftp! }) as unknown as BlobPart;
-      const filename = `${(currentWorkout!.name || 'Workout').replace(/\s+/g, '_')}_${timestamp()}.fit`;
+      const workout  = freshWorkout();
+      const data     = generateFitFile({ ...workout, ftp: ftp! }) as unknown as BlobPart;
+      const filename = `${(workout.name || 'Workout').replace(/\s+/g, '_')}_${timestamp()}.fit`;
       triggerDownload(data, 'application/octet-stream', filename);
       showNotification('success', `Downloaded: ${filename}`);
     } catch (e) {

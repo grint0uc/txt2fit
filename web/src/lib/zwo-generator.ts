@@ -10,7 +10,8 @@ function escapeXml(str: string): string {
 }
 
 function pct(value: number): string {
-  return (value / 100).toFixed(3);
+  // Use minimal decimal representation (0.7 not 0.700) to match Zwift/Hammerhead format
+  return parseFloat((value / 100).toFixed(4)).toString();
 }
 
 function element(
@@ -170,7 +171,6 @@ export function generateZwoFile(workout: Workout, ftp: number): string {
   const steps = parts.join('\n');
 
   return (
-    `<?xml version="1.0" encoding="utf-8"?>\n` +
     `<workout_file>\n` +
     `    <author></author>\n` +
     `    <name>${name}</name>\n` +
