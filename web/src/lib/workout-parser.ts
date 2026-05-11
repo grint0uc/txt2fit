@@ -72,7 +72,8 @@ export class WorkoutParser {
       const line = lines[i];
 
       // Multi-step repeat block: 3x (5min 100%FTP, 2min 50%FTP)
-      const blockMatch = line.match(/^(\d+)x\s*\((.+)\)$/i);
+      // Optional trailing note "..." after closing ) is stripped and ignored
+      const blockMatch = line.match(/^(\d+)x\s*\((.+)\)\s*(?:"[^"]*")?$/i);
       if (blockMatch) {
         const count = parseInt(blockMatch[1], 10);
         const groupId = ++this.groupCounter;
