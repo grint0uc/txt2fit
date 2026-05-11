@@ -6,8 +6,8 @@ import { generateFitFile } from '../lib/fit-generator';
 import { generateZwoFile } from '../lib/zwo-generator';
 import { parseWorkout } from '../lib/workout-parser';
 
-const ZWO_DEVICES = 'Hammerhead Karoo · Zwift · TrainerRoad · Rouvy · FulGaz';
-const FIT_DEVICES = 'Garmin Edge · Wahoo ELEMNT/BOLT · Bryton · Hammerhead Karoo';
+const ZWO_DEVICES = 'Hammerhead Karoo · Zwift · TrainerRoad · Rouvy · FulGaz · Wahoo SYSTM';
+const FIT_DEVICES = 'Garmin Edge · Wahoo ELEMNT/BOLT · Hammerhead Karoo · Bryton · Polar';
 
 export function DownloadButton() {
   const { currentWorkout, workoutText, ftp } = useWorkoutStore();
@@ -87,14 +87,14 @@ export function DownloadButton() {
             id="download-zwo-btn"
             onClick={handleZwo}
             disabled={disabled || loadingZwo}
-            title={disabled ? disabledTitle : `Recommended for Hammerhead · ${ZWO_DEVICES}`}
+            title={disabled ? disabledTitle : `Indoor training platforms & smart computers · ${ZWO_DEVICES}`}
             className="btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <FiDownload size={15} />
             {loadingZwo ? 'Generating…' : 'Download .ZWO'}
           </button>
           <p className="text-[10px] text-graphite-400 leading-tight px-0.5">
-            Recommended for Hammerhead · renders ramps
+            Indoor platforms · ramps &amp; repeats
           </p>
           <p className="text-[10px] text-graphite-500 leading-tight px-0.5">
             {ZWO_DEVICES}
@@ -114,7 +114,7 @@ export function DownloadButton() {
             {loadingFit ? 'Generating…' : 'Download .FIT'}
           </button>
           <p className="text-[10px] text-graphite-400 leading-tight px-0.5">
-            Universal fallback · no ramp visuals
+            Universal · ramps stored as ranges
           </p>
           <p className="text-[10px] text-graphite-500 leading-tight px-0.5">
             {FIT_DEVICES}
