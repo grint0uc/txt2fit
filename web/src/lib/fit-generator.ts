@@ -225,9 +225,27 @@ export class FitGenerator {
   }
 
   private resolveIntensity(step: WorkoutStep): number {
-    if (step.intensity !== undefined) return step.intensity as number;
+    // Explicit WARMUP/COOLDOWN/REST/RECOVERY always respected (set by parser for special blocks)
+    const explicit = step.intensity as number | undefined;
+    if (
+      explicit === Intensity.WARMUP   ||
+      explicit === Intensity.COOLDOWN ||
+      explicit === Intensity.REST     ||
+      explicit === Intensity.RECOVERY
+    ) {
+      return explicit;
+    }
 
-    const avg = ((step.power_low_pct ?? 0) + (step.power_high_pct ?? step.power_low_pct ?? 0)) / 2;
+    // Any ramp step: use WARMUP (ascending) or COOLDOWN (descending) so the
+    // device executes a true linear ramp rather than a fixed power zone
+    const start = step.power_low_pct ?? 0;
+    const end   = step.power_high_pct ?? start;
+    if (start !== end) {
+      return start < end ? Intensity.WARMUP : Intensity.COOLDOWN;
+    }
+
+    // Steady step – derive from average power
+    const avg = (start + end) / 2;
     if (avg < 56)  return Intensity.RECOVERY;
     if (avg < 106) return Intensity.ACTIVE;
     return Intensity.INTERVAL;
