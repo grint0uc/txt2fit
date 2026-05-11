@@ -23,17 +23,8 @@ export function DownloadButton() {
     setIsLoading(true);
 
     try {
-      // Generate FIT file
       const fitData = generateFitFile(currentWorkout);
 
-      // Debug: Log first 100 bytes
-      const debugHex = Array.from(fitData.slice(0, 100))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-      console.log(`Generated ${fitData.length} bytes`);
-      console.log(`First 100 bytes: ${debugHex}`);
-
-      // Create blob and download
       const blob = new Blob([fitData as BlobPart], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -58,13 +49,14 @@ export function DownloadButton() {
 
   return (
     <button
+      id="download-fit-btn"
       onClick={handleDownload}
       disabled={isDisabled}
-      title={!ftp ? 'Set FTP value to download' : ''}
-      className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      title={!ftp ? 'Set your FTP value to enable download' : 'Download as .FIT file'}
+      className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
     >
-      <FiDownload size={18} />
-      {isLoading ? 'Generating...' : 'Download .FIT'}
+      <FiDownload size={15} />
+      {isLoading ? 'Generating…' : 'Download .FIT'}
     </button>
   );
 }

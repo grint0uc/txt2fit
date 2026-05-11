@@ -18,11 +18,11 @@ export function AuthModal() {
     return (
       <Modal onClose={closeAuthModal}>
         <div className="text-center">
-          <h2 className="text-xl font-bold text-carbon-100 mb-4">Authentication</h2>
-          <p className="text-carbon-300 mb-6">
+          <h2 className="text-xl font-bold text-graphite-100 mb-4">Authentication</h2>
+          <p className="text-graphite-300 mb-6">
             Supabase is not configured yet. Auth features will be available soon.
           </p>
-          <p className="text-xs text-carbon-400">
+          <p className="text-xs text-graphite-400">
             For now, you can download workouts without an account.
           </p>
           <button
@@ -87,13 +87,13 @@ export function AuthModal() {
 
   return (
     <Modal onClose={closeAuthModal}>
-      <h2 className="text-xl font-bold text-carbon-100 mb-6 text-center">
+      <h2 className="text-xl font-bold text-graphite-100 mb-6 text-center">
         {isLogin ? 'Login' : 'Sign Up'}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-carbon-300 mb-2">
+          <label className="block text-sm font-medium text-graphite-300 mb-2">
             Email
           </label>
           <input
@@ -107,7 +107,7 @@ export function AuthModal() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-carbon-300 mb-2">
+          <label className="block text-sm font-medium text-graphite-300 mb-2">
             Password
           </label>
           <input
@@ -131,7 +131,7 @@ export function AuthModal() {
               setIsLogin(!isLogin);
               setPassword('');
             }}
-            className="text-sm text-plasma-pink hover:text-plasma-pink-light transition"
+            className="text-sm text-accent hover:text-accent-light transition"
             disabled={isSubmitting}
           >
             {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Login'}
@@ -154,7 +154,7 @@ function Modal({ onClose, children }: ModalProps) {
       <div className="modal-content">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-carbon-400 hover:text-carbon-100"
+          className="absolute top-4 right-4 text-graphite-400 hover:text-graphite-100"
         >
           <FiX size={24} />
         </button>
