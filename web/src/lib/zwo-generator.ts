@@ -31,6 +31,49 @@ function element(
   return `        <${tag} ${attrStr}/>`;
 }
 
+function resolveSteadyPct(step: WorkoutStep, ftp: number): number | undefined {
+  if (step.power_low_pct !== undefined) {
+    if (step.power_low_pct !== step.power_high_pct) return undefined; // ramp
+    return step.power_low_pct;
+  }
+  if (step.power_watts !== undefined && ftp > 0) {
+    if (step.power_watts !== (step.power_watts_high ?? step.power_watts)) return undefined; // ramp
+    return Math.round((step.power_watts / ftp) * 100);
+  }
+  return undefined;
+}
+
+function tryIntervalsT(
+  on: WorkoutStep,
+  off: WorkoutStep,
+  repeat: number,
+  ftp: number
+): string | null {
+  const onPct  = resolveSteadyPct(on, ftp);
+  const offPct = resolveSteadyPct(off, ftp);
+  if (onPct === undefined || offPct === undefined) return null;
+
+  const onDur  = Math.round(on.duration_seconds);
+  const offDur = Math.round(off.duration_seconds);
+  const attrs = {
+    Repeat:      repeat,
+    OnDuration:  onDur,
+    OffDuration: offDur,
+    OnPower:     pct(onPct),
+    OffPower:    pct(offPct),
+  };
+  const attrStr = Object.entries(attrs).map(([k, v]) => `${k}="${v}"`).join(' ');
+
+  if (on.notes) {
+    return (
+      `        <IntervalsT ${attrStr}>\n` +
+      `            <textevent timeoffset="0" message="${escapeXml(on.notes)}"/>\n` +
+      `        </IntervalsT>`
+    );
+  }
+  return `        <IntervalsT ${attrStr}/>`;
+}
+
 function stepToZwo(step: WorkoutStep, ftp: number): string {
   const dur = Math.round(step.duration_seconds);
   const note = step.notes;
@@ -61,8 +104,6 @@ function stepToZwo(step: WorkoutStep, ftp: number): string {
       }, note);
 
     case StepType.COOLDOWN:
-      // Parser stores cooldown as power_low_pct=start(65), power_high_pct=end(40)
-      // ZWO Cooldown: PowerLow = start (numerically higher), PowerHigh = end (lower)
       return element('Cooldown', {
         Duration:  dur,
         PowerLow:  pct(low),
@@ -71,14 +112,12 @@ function stepToZwo(step: WorkoutStep, ftp: number): string {
 
     case StepType.RAMP:
       if (low <= high!) {
-        // Ascending ramp
         return element('Ramp', {
           Duration:  dur,
           PowerLow:  pct(low),
           PowerHigh: pct(high!),
         }, note);
       } else {
-        // Descending ramp → Cooldown element
         return element('Cooldown', {
           Duration:  dur,
           PowerLow:  pct(low),
@@ -94,7 +133,41 @@ function stepToZwo(step: WorkoutStep, ftp: number): string {
 
 export function generateZwoFile(workout: Workout, ftp: number): string {
   const name = escapeXml(workout.name || 'Workout');
-  const steps = workout.steps.map((s) => stepToZwo(s, ftp)).join('\n');
+  const parts: string[] = [];
+
+  const consumed = new Set<number>();
+  const triedGroups = new Set<number>();
+
+  for (let i = 0; i < workout.steps.length; i++) {
+    if (consumed.has(i)) continue;
+
+    const step = workout.steps[i];
+
+    // Attempt to collapse 2-step repeat groups into IntervalsT
+    if (
+      step._repeatId !== undefined &&
+      step._repeatStep === 0 &&
+      !triedGroups.has(step._repeatId)
+    ) {
+      triedGroups.add(step._repeatId);
+      const size  = step._repeatSize!;
+      const count = step._repeatCount!;
+
+      if (size === 2) {
+        const cycle = workout.steps.slice(i, i + size);
+        const intervalsT = tryIntervalsT(cycle[0], cycle[1], count, ftp);
+        if (intervalsT) {
+          parts.push(intervalsT);
+          for (let j = i; j < i + size * count; j++) consumed.add(j);
+          continue;
+        }
+      }
+    }
+
+    parts.push(stepToZwo(step, ftp));
+  }
+
+  const steps = parts.join('\n');
 
   return (
     `<?xml version="1.0" encoding="utf-8"?>\n` +

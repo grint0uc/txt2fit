@@ -55,6 +55,11 @@ export interface WorkoutStep {
   notes?: string;
   intensity?: Intensity;
   zone?: number; // original zone number if input was e.g. Z4
+  // Internal metadata for ZWO repeat group collapsing (not used by FIT generator)
+  _repeatId?: number;
+  _repeatCount?: number;
+  _repeatStep?: number;
+  _repeatSize?: number;
 }
 
 // Complete Workout

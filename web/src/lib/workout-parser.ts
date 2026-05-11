@@ -48,6 +48,7 @@ interface ParsedLine {
 export class WorkoutParser {
   private errors: string[] = [];
   private warnings: string[] = [];
+  private groupCounter: number = 0;
 
   parse(workoutText: string): ParseResult {
     this.errors = [];
@@ -74,6 +75,7 @@ export class WorkoutParser {
       const blockMatch = line.match(/^(\d+)x\s*\((.+)\)$/i);
       if (blockMatch) {
         const count = parseInt(blockMatch[1], 10);
+        const groupId = ++this.groupCounter;
         const blockSteps: WorkoutStep[] = blockMatch[2]
           .split(',')
           .map((s) => s.trim())
@@ -82,7 +84,12 @@ export class WorkoutParser {
             const innerParsed = this.parseLine(innerLine, i + 1);
             return innerParsed ? [this.buildStep(innerParsed)] : [];
           });
-        for (let r = 0; r < count; r++) steps.push(...blockSteps);
+        const size = blockSteps.length;
+        for (let r = 0; r < count; r++) {
+          blockSteps.forEach((s, idx) => {
+            steps.push({ ...s, _repeatId: groupId, _repeatCount: count, _repeatStep: idx, _repeatSize: size });
+          });
+        }
         continue;
       }
 
