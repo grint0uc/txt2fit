@@ -102,6 +102,7 @@ export enum Manufacturer {
   GARMIN = 1,
   WAHOO = 0xF1,
   HAMMERHEAD = 263,
+  DEVELOPMENT = 255,
 }
 
 // Field definitions for messages
