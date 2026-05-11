@@ -69,6 +69,23 @@ export class WorkoutParser {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+
+      // Multi-step repeat block: 3x (5min 100%FTP, 2min 50%FTP)
+      const blockMatch = line.match(/^(\d+)x\s*\((.+)\)$/i);
+      if (blockMatch) {
+        const count = parseInt(blockMatch[1], 10);
+        const blockSteps: WorkoutStep[] = blockMatch[2]
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .flatMap((innerLine) => {
+            const innerParsed = this.parseLine(innerLine, i + 1);
+            return innerParsed ? [this.buildStep(innerParsed)] : [];
+          });
+        for (let r = 0; r < count; r++) steps.push(...blockSteps);
+        continue;
+      }
+
       const parsed = this.parseLine(line, i + 1);
 
       if (!parsed) {
